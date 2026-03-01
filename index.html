@@ -18,7 +18,7 @@
     #generateBtn { background: #ae52ff; color: white; }
     #generateBtn:hover { background: #b96bff; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(174,82,255,0.4); }
     
-    /* 新增：复制按钮样式 */
+    /* 复制按钮样式 */
     #copyCodeBtn { background: #3498db; color: white; }
     #copyCodeBtn:hover { background: #5dade2; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(52,152,219,0.4); }
     
@@ -38,7 +38,7 @@
   <div class="main-area">
     <div class="editor">
       <textarea id="code" placeholder="-- 粘贴你的 Lua 代码在这里
--- 点击下方按钮下载混淆后的 txt 文件 或 直接复制混淆代码
+-- 点击下方按钮生成混淆代码
 -- 混淆级别：极高 (反人工分析 + 虚假逻辑)"></textarea>
     </div>
 
@@ -53,25 +53,12 @@
   <div id="msg"></div>
 
   <script>
-    // 保存最后一次生成的代码，供复制按钮使用
     let lastGeneratedCode = "";
 
     // 生成虚假检查逻辑
     function generateFakeCheck() {
-        return `
--- [SYSTEM] 安全检查模块 (虚假逻辑)
-local _check_id = math.random(10000, 99999)
-local function secure_verify()
-    for i=1, 10 do
-        local _ = string.reverse("fakesecurity")
-        if _ == "ytirucesekaf" then
-            -- 虚假日志
-            -- print("[SECURE] Checksum valid: " .. _check_id)
-        end
-    end
-end
-secure_verify()
-`;
+        // 去除了虚假逻辑中的具体注释
+        return `local _check_id=math.random(10000,99999);local function secure_verify() for i=1,10 do local _=string.reverse("fakesecurity");if _=="ytirucesekaf" then end end end;secure_verify();`;
     }
 
     // 核心加密逻辑
@@ -86,15 +73,14 @@ secure_verify()
       let b64 = btoa(unescape(encodeURIComponent(charEncoded)));
       b64 = btoa(b64); 
 
-      // 3. 构造极度复杂的 Lua 解密器 + 假逻辑
-      return `-- 纸lua 终极混淆保护\n` +
-             `local __F = ${JSON.stringify(generateFakeCheck())}\n` +
-             `local j = function(s) local r='' for i=1,#s do r=r..string.char(s:byte(i)-1) end return r end\n` +
-             `local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'\n` +
-             `local d=function(data) data=string.gsub(data,'[^'..b..'=]','') return (data:gsub('.',function(x) if (x=='=') then return '' end local r,f='',(b:find(x)-1) for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1 the or '0') end return r end):gsub('%d%d%d?%d?%d?%d?%d?%d?',function(x) if (#x~=8) then return '' end local c=0 for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end return string.char(c) end)) end\n` +
-             `local __ = "${b64}"\n` +
-             `local _ = j(d(d(__)))\n` +
-             `loadstring(_..__F)()\n`;
+      // 3. 构造极度复杂的 Lua 解密器，去除了所有注释
+      return `local __F=${JSON.stringify(generateFakeCheck())};` +
+             `local j=function(s) local r='' for i=1,#s do r=r..string.char(s:byte(i)-1) end return r end;` +
+             `local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';` +
+             `local d=function(data) data=string.gsub(data,'[^'..b..'=]','');return (data:gsub('.',function(x) if (x=='=') then return '' end local r,f='',(b:find(x)-1);for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>=1 and '1' or '0');end;return r;end):gsub('%d%d%d?%d?%d?%d?%d?%d?',function(x) if (#x~=8) then return '' end;local c=0;for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0);end;return string.char(c);end));end;` +
+             `local __="${b64}";` +
+             `local _=j(d(d(__)));` +
+             `loadstring(_..__F)();`;
     }
 
     function getNextIndex() {
@@ -112,7 +98,7 @@ secure_verify()
         setTimeout(() => { msg.textContent = ''; }, 3000);
     }
 
-    // --- 修改部分：生成并下载 TXT 文件 ---
+    // 生成并下载 TXT 文件
     function generateTxt() {
       const originalCode = document.getElementById('code').value.trim();
 
@@ -124,22 +110,8 @@ secure_verify()
       // 获取加密后的内容
       lastGeneratedCode = obfuscateCode(originalCode);
       
-      const txtContent = `
-=========================================
-      纸lua 终极加密文档
-=========================================
-
-[使用说明]
-请将下方混淆代码复制到你的项目中运行。
-
------------------------------------------
-[加密代码]
-${lastGeneratedCode}
------------------------------------------
-
-[提示]
-此文件由生成器自动创建。
-      `;
+      // TXT 文件里也不包含注释说明，只包含代码本身
+      const txtContent = lastGeneratedCode;
 
       const index = getNextIndex();
       let filename = `encrypted_code_${index}.txt`; 
@@ -163,7 +135,7 @@ ${lastGeneratedCode}
       showMsg(`文本文件已生成：${filename}  •  已下载`, '#a0ffcc');
     }
 
-    // --- 新增部分：复制混淆代码到剪贴板 ---
+    // 复制混淆代码到剪贴板
     function copyObfuscatedCode() {
       const originalCode = document.getElementById('code').value.trim();
       
