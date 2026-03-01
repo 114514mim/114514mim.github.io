@@ -11,13 +11,23 @@
     .editor { flex: 1; min-width: 500px; }
     textarea { width: 100%; height: 480px; padding: 20px; background: #141422; border: 1px solid #333355; border-radius: 10px; color: #d0d0ff; font-family: Consolas, monospace; font-size: 15px; resize: vertical; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
     .sidebar { width: 240px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
-    button, .link-btn { padding: 16px 40px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.25s; width: 100%; max-width: 240px; text-decoration: none; text-align: center; box-sizing: border-box; }
+    
+    /* 统一按钮样式 */
+    button, .link-btn { padding: 16px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.25s; width: 100%; max-width: 240px; text-decoration: none; text-align: center; box-sizing: border-box; }
+    
     #generateBtn { background: #ae52ff; color: white; }
     #generateBtn:hover { background: #b96bff; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(174,82,255,0.4); }
+    
+    /* 新增：复制按钮样式 */
+    #copyCodeBtn { background: #3498db; color: white; }
+    #copyCodeBtn:hover { background: #5dade2; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(52,152,219,0.4); }
+    
     #copyAuthorBtn { background: #ff69b4; color: white; }
     #copyAuthorBtn:hover { background: #ff85c0; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,105,180,0.4); }
+    
     .link-btn { background: #2ecc71; color: white; display: block; }
     .link-btn:hover { background: #27ae60; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(46,204,113,0.4); }
+    
     #msg { margin-top: 20px; font-size: 16px; color: #a0ffcc; text-align: center; width: 100%; max-width: 960px; min-height: 20px; }
   </style>
 </head>
@@ -28,12 +38,13 @@
   <div class="main-area">
     <div class="editor">
       <textarea id="code" placeholder="-- 粘贴你的 Lua 代码在这里
--- 点击下方按钮下载混淆后的 txt 文件
+-- 点击下方按钮下载混淆后的 txt 文件 或 直接复制混淆代码
 -- 混淆级别：极高 (反人工分析 + 虚假逻辑)"></textarea>
     </div>
 
     <div class="sidebar">
       <button id="generateBtn" onclick="generateTxt()">下载混淆 TXT</button>
+      <button id="copyCodeBtn" onclick="copyObfuscatedCode()">复制混淆代码</button>
       <button id="copyAuthorBtn" onclick="copyAuthor()">复制作者 B 站</button>
       <a href="https://your-creation-site.com" target="_blank" class="link-btn">创造链接</a>
     </div>
@@ -42,6 +53,9 @@
   <div id="msg"></div>
 
   <script>
+    // 保存最后一次生成的代码，供复制按钮使用
+    let lastGeneratedCode = "";
+
     // 生成虚假检查逻辑
     function generateFakeCheck() {
         return `
@@ -90,21 +104,26 @@ secure_verify()
       return index;
     }
 
+    // 更新消息提示
+    function showMsg(text, color) {
+        const msg = document.getElementById('msg');
+        msg.textContent = text;
+        msg.style.color = color;
+        setTimeout(() => { msg.textContent = ''; }, 3000);
+    }
+
     // --- 修改部分：生成并下载 TXT 文件 ---
     function generateTxt() {
       const originalCode = document.getElementById('code').value.trim();
-      const msg = document.getElementById('msg');
 
       if (!originalCode) {
-        msg.textContent = '请输入代码再生成哦～';
-        msg.style.color = '#ff7777';
+        showMsg('请输入代码再生成哦～', '#ff7777');
         return;
       }
 
       // 获取加密后的内容
-      const finalCode = obfuscateCode(originalCode);
+      lastGeneratedCode = obfuscateCode(originalCode);
       
-      // 在这里添加你想要在 txt 文件里展示的额外信息
       const txtContent = `
 =========================================
       纸lua 终极加密文档
@@ -115,7 +134,7 @@ secure_verify()
 
 -----------------------------------------
 [加密代码]
-${finalCode}
+${lastGeneratedCode}
 -----------------------------------------
 
 [提示]
@@ -123,7 +142,7 @@ ${finalCode}
       `;
 
       const index = getNextIndex();
-      let filename = `encrypted_code_${index}.txt`; // 文件后缀为 .txt
+      let filename = `encrypted_code_${index}.txt`; 
 
       // 创建 Blob 对象
       const blob = new Blob([txtContent], { type: 'text/plain' });
@@ -141,17 +160,35 @@ ${finalCode}
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      msg.textContent = `文本文件已生成：${filename}  •  已下载`;
-      msg.style.color = '#a0ffcc';
+      showMsg(`文本文件已生成：${filename}  •  已下载`, '#a0ffcc');
+    }
+
+    // --- 新增部分：复制混淆代码到剪贴板 ---
+    function copyObfuscatedCode() {
+      const originalCode = document.getElementById('code').value.trim();
+      
+      if (!originalCode) {
+        showMsg('请输入代码再复制哦～', '#ff7777');
+        return;
+      }
+
+      // 如果还没生成过代码，先生成一次
+      if (!lastGeneratedCode) {
+        lastGeneratedCode = obfuscateCode(originalCode);
+      }
+
+      navigator.clipboard.writeText(lastGeneratedCode).then(() => {
+        showMsg('混淆代码已复制到剪贴板！', '#3498db');
+      }).catch(err => {
+        showMsg('复制失败，请手动复制', '#ff7777');
+        console.error('Copy failed:', err);
+      });
     }
 
     function copyAuthor() {
       const link = 'https://b23.tv/4DZnv9H';
       navigator.clipboard.writeText(link).then(() => {
-        const msg = document.getElementById('msg');
-        msg.textContent = '已复制作者 B 站主页：' + link;
-        msg.style.color = '#ff69b4';
-        setTimeout(() => { msg.textContent = ''; }, 5000);
+        showMsg('已复制作者 B 站主页：' + link, '#ff69b4');
       });
     }
   </script>
