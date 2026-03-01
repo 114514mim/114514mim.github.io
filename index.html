@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>纸lua 终极加密生成器 - Hex版</title>
+  <title>纸lua 数组混淆器</title>
   <style>
-    body { margin: 0; padding: 0; font-family: system-ui, sans-serif; background: #0f0f17; color: #e0e0ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b0b15; color: #e0e0ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     h1 { color: #a0c0ff; margin-bottom: 20px; }
-    .main-area { width: 90%; max-width: 960px; display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
+    .main-area { width: 90%; max-width: 1000px; display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
     .editor { flex: 1; min-width: 500px; }
-    textarea { width: 100%; height: 480px; padding: 20px; background: #141422; border: 1px solid #333355; border-radius: 10px; color: #d0d0ff; font-family: Consolas, monospace; font-size: 15px; resize: vertical; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+    textarea { width: 100%; height: 480px; padding: 20px; background: #141422; border: 1px solid #333355; border-radius: 10px; color: #98fb98; font-family: 'Consolas', monospace; font-size: 15px; resize: vertical; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
     .sidebar { width: 240px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
     
     button, .link-btn { padding: 16px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.25s; width: 100%; max-width: 240px; text-decoration: none; text-align: center; box-sizing: border-box; }
@@ -26,20 +26,21 @@
     .link-btn { background: #2ecc71; color: white; display: block; }
     .link-btn:hover { background: #27ae60; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(46,204,113,0.4); }
     
-    #msg { margin-top: 20px; font-size: 16px; color: #a0ffcc; text-align: center; width: 100%; max-width: 960px; min-height: 20px; }
+    #msg { margin-top: 20px; font-size: 16px; color: #a0ffcc; text-align: center; width: 100%; max-width: 1000px; min-height: 20px; }
   </style>
 </head>
 <body>
 
-  <h1>纸lua 终极加密生成器</h1>
+  <h1>纸lua 数组混淆器</h1>
 
   <div class="main-area">
     <div class="editor">
-      <textarea id="code" placeholder="-- 粘贴你的 Lua 代码在这里"></textarea>
+      <textarea id="code" placeholder="-- 在此处粘贴你的 Lua 代码
+-- 混淆器将其转换为十六进制数组形式"></textarea>
     </div>
 
     <div class="sidebar">
-      <button id="generateBtn" onclick="generateTxt()">下载混淆 TXT</button>
+      <button id="generateBtn" onclick="generateCode()">生成加密数组</button>
       <button id="copyCodeBtn" onclick="copyObfuscatedCode()">复制混淆代码</button>
       <button id="copyAuthorBtn" onclick="copyAuthor()">复制作者 B 站</button>
       <a href="https://b23.tv/4DZnv9H" target="_blank" class="link-btn">创造链接</a>
@@ -51,32 +52,31 @@
   <script>
     let lastGeneratedCode = "";
 
-    // 核心加密逻辑：将 Lua 代码转换为 Hex 字符串
+    // 核心加密逻辑：转换为十六进制数组
     function obfuscateCode(code) {
       if (!code.trim()) return "";
       
-      // 1. 将字符串转换为 Hex
-      let hexEncoded = "";
+      // 1. 将字符串转换为 Hex 数组
+      let hexArray = [];
       for (let i = 0; i < code.length; i++) {
-        hexEncoded += code.charCodeAt(i).toString(16).padStart(2, '0');
+        hexArray.push("0x" + code.charCodeAt(i).toString(16).padStart(2, '0'));
       }
       
-      // 2. 生成随机变量名，增加混淆度
-      const randVar = () => "_" + Math.random().toString(36).substring(2, 10);
-      const v1 = randVar();
-      const v2 = randVar();
-      const v3 = randVar();
+      const hexString = hexArray.join(",");
 
-      // 3. 构造 Lua 解密器
-      return `local ${v1} = "${hexEncoded}";` +
-             `local ${v2} = function(${v3})` +
-             ` local r = "";` +
-             ` for i = 1, #${v3}, 2 do` +
-             `  r = r .. string.char(tonumber(string.sub(${v3}, i, i + 1), 16));` +
-             ` end;` +
-             ` return r;` +
-             `end;` +
-             `loadstring(${v2}(${v1}))();`;
+      // 2. 生成随机变量名，增加混淆度
+      const randVar = () => "_0x" + Math.random().toString(16).substring(2, 6);
+      const v1 = randVar(), v2 = randVar(), v3 = randVar(), v4 = randVar();
+
+      // 3. 构造 Lua 解密代码 (匹配要求的数组格式)
+      return `local ${v1} = {${hexString}};\n` +
+             `local ${v2} = "";\n` +
+             `for ${v3}, ${v4} in pairs(${v1}) do\n` +
+             `    ${v2} = ${v2} .. string.char(${v4});\n` +
+             `end;\n` +
+             `local _0xHttp = "Http";\n` +
+             `local _0xGet = "Get";\n` +
+             `loadstring(game[_0xHttp .. _0xGet](game, ${v2}))();`;
     }
 
     function showMsg(text, color) {
@@ -86,30 +86,23 @@
         setTimeout(() => { msg.textContent = ''; }, 3000);
     }
 
-    function generateTxt() {
+    function generateCode() {
       const originalCode = document.getElementById('code').value.trim();
       if (!originalCode) return showMsg('请输入代码', '#ff7777');
       lastGeneratedCode = obfuscateCode(originalCode);
-      
-      const blob = new Blob([lastGeneratedCode], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `encrypted_${Date.now()}.txt`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showMsg('已下载', '#a0ffcc');
+      showMsg('✅ 加密代码已生成至编辑器', '#a0ffcc');
+      document.getElementById('code').value = lastGeneratedCode;
     }
 
     function copyObfuscatedCode() {
-      const originalCode = document.getElementById('code').value.trim();
-      if (!originalCode) return showMsg('请输入代码', '#ff7777');
-      lastGeneratedCode = obfuscateCode(originalCode);
-      navigator.clipboard.writeText(lastGeneratedCode).then(() => showMsg('已复制', '#3498db'));
+      const codeArea = document.getElementById('code');
+      codeArea.select();
+      document.execCommand('copy');
+      showMsg('✅ 代码已复制到剪贴板', '#3498db');
     }
 
     function copyAuthor() {
-      navigator.clipboard.writeText('https://b23.tv/4DZnv9H').then(() => showMsg('作者链接已复制', '#ff69b4'));
+      navigator.clipboard.writeText('https://b23.tv/4DZnv9H').then(() => showMsg('✅ 作者链接已复制', '#ff69b4'));
     }
   </script>
 </body>
