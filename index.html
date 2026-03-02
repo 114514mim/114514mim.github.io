@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZHI LUA - 霓虹加密终端</title>
+  <title>ZHI LUA by 纸飞机yut</title>
   <style>
     :root { --glow: #00f2ff; --bg: #05050a; }
     body { margin: 0; background: var(--bg); color: #fff; font-family: 'Fira Code', monospace; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -36,10 +36,10 @@
   <div class="container">
     <textarea id="input" placeholder="-- 输入原始代码..."></textarea>
     <div class="controls">
-      <button onclick="proEncrypt()">🚀 高级矩阵加密</button>
-      <button onclick="downloadCode()">💾 下载混淆文件</button>
-      <button onclick="copy()">📋 复制结果</button>
-      <button onclick="window.location.reload()" style="border-color:#ff4444; color:#ff4444;">♻️ 重置</button>
+      <button onclick="proEncrypt()">加密</button>
+      <button onclick="downloadCode()">下载混淆文件</button>
+      <button onclick="copy()">复制</button>
+      <button onclick="window.location.reload()" style="border-color:#ff4444; color:#ff4444;">重置</button>
     </div>
   </div>
 
@@ -55,7 +55,8 @@
       // 1. 数据处理：将每个字符转为偏移后的数值
       let rawData = [];
       for (let i = 0; i < code.length; i++) {
-        rawData.push(code.charCodeAt(i) + 5); 
+        // 限制在 0-255 范围内
+        rawData.push((code.charCodeAt(i) + 5) % 256); 
       }
 
       // 2. 生成矩阵数组：每两个真实数据间插入一个干扰数据
@@ -70,7 +71,9 @@
 
       // 3. 将数组转为 Lua 定义格式 (算术隐藏)
       let luaArray = matrix.map(v => {
-          let off = Math.floor(Math.random() * 100) + 10;
+          // 确保产生的数值加上偏移后不超过255
+          let maxOff = Math.min(100, 255 - v);
+          let off = Math.floor(Math.random() * maxOff) + 1;
           return `(${v + off} - ${off})`;
       }).join(",");
 
@@ -85,7 +88,10 @@ local ${vRes} = ""
 for ${vIdx} = 1, #${vData} do
     -- 跳过干扰字节提取真实数据
     if ${vIdx} % 2 == 1 then
-        ${vRes} = ${vRes} .. string.char(${vData}[${vIdx}] - 5)
+        -- 修正还原偏移逻辑，确保数值在char范围内
+        local charCode = (${vData}[${vIdx}] - 5)
+        if charCode < 0 then charCode = charCode + 256 end
+        ${vRes} = ${vRes} .. string.char(charCode)
     end
 end
 local ${vLoad} = getfenv()[string.reverse("gnirtsdaol")]
