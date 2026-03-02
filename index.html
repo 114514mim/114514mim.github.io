@@ -8,7 +8,7 @@
     :root { --glow: #00f2ff; --bg: #05050a; }
     body { margin: 0; background: var(--bg); color: #fff; font-family: 'Fira Code', monospace; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     
-    .header { margin: 40px 0; text-align: center; }
+    .header { margin: 20px 0; text-align: center; }
     h1 { font-size: 2rem; text-transform: uppercase; letter-spacing: 5px; color: var(--glow); text-shadow: 0 0 20px var(--glow); }
 
     .container { display: flex; width: 95%; max-width: 1200px; gap: 20px; background: rgba(255,255,255,0.02); padding: 20px; border: 1px solid #1a1a2e; border-radius: 15px; backdrop-filter: blur(10px); }
@@ -18,11 +18,11 @@
 
     .controls { display: flex; flex-direction: column; gap: 15px; width: 260px; }
     
-    button { padding: 15px; background: transparent; color: var(--glow); border: 1px solid var(--glow); border-radius: 5px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.3s; position: relative; overflow: hidden; }
+    button { padding: 15px; background: transparent; color: var(--glow); border: 1px solid var(--glow); border-radius: 5px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.3s; }
     button:hover { background: var(--glow); color: #000; box-shadow: 0 0 30px var(--glow); }
     button:active { transform: scale(0.95); }
 
-    .status-bar { margin-top: 20px; font-size: 12px; color: #555; }
+    .status-bar { margin: 10px 0; font-size: 12px; color: #555; }
     #msg { color: var(--glow); font-weight: bold; }
   </style>
 </head>
@@ -37,68 +37,74 @@
     <textarea id="input" placeholder="-- 输入原始代码..."></textarea>
     <div class="controls">
       <button onclick="proEncrypt()">🚀 高级矩阵加密</button>
-      <button onclick="copy()">📋 复制混淆代码</button>
-      <button onclick="window.location.reload()" style="border-color:#ff4444; color:#ff4444;">♻️ 重置终端</button>
-      <div style="margin-top:auto; padding:15px; border:1px dashed #333; font-size:11px; color:#666;">
-        特性：<br>
-        - 插入伪随机干扰字节<br>
-        - 算术逻辑隐藏数值<br>
-        - 动态解密函数名
-      </div>
+      <button onclick="downloadCode()">💾 下载混淆文件</button>
+      <button onclick="copy()">📋 复制结果</button>
+      <button onclick="window.location.reload()" style="border-color:#ff4444; color:#ff4444;">♻️ 重置</button>
     </div>
   </div>
 
   <div class="status-bar">系统状态: <span id="msg">就绪</span></div>
 
   <script>
+    let currentObfuscatedCode = "";
+
     function proEncrypt() {
       const code = document.getElementById('input').value.trim();
-      if(!code) return showMsg("错误: 未检测到有效载荷");
+      if(!code) return showMsg("错误: 输入为空");
 
-      // 1. 混淆数值并插入垃圾数据
-      let mixedData = [];
+      // 1. 数据处理：将每个字符转为偏移后的数值
+      let rawData = [];
       for (let i = 0; i < code.length; i++) {
-        // 真实数据
-        mixedData.push(code.charCodeAt(i) + 7); // 偏移加密
-        // 插入 1-2 个垃圾数据
-        let trashCount = Math.floor(Math.random() * 2) + 1;
-        for(let j=0; j<trashCount; j++) {
-            mixedData.push(Math.floor(Math.random() * 255)); 
+        rawData.push(code.charCodeAt(i) + 5); 
+      }
+
+      // 2. 生成矩阵数组：每两个真实数据间插入一个干扰数据
+      let matrix = [];
+      for(let i=0; i<rawData.length; i++){
+        matrix.push(rawData[i]);
+        if(i < rawData.length - 1){
+            // 插入随机干扰字节
+            matrix.push(Math.floor(Math.random() * 255));
         }
       }
 
-      // 2. 将数组转为 Lua 定义格式 (随机选择加减法混淆)
-      let luaArray = mixedData.map(v => {
-          let mode = Math.random();
-          if(mode > 0.5) {
-              let off = Math.floor(Math.random() * 50) + 1;
-              return `(${v + off} - ${off})`;
-          } else {
-              let off = Math.floor(Math.random() * 20) + 2;
-              return `(${v - off} + ${off})`;
-          }
+      // 3. 将数组转为 Lua 定义格式 (算术隐藏)
+      let luaArray = matrix.map(v => {
+          let off = Math.floor(Math.random() * 100) + 10;
+          return `(${v + off} - ${off})`;
       }).join(",");
 
-      // 3. 生成随机变量名
+      // 4. 生成随机变量名
       const rand = () => "_" + Math.random().toString(36).substring(2, 8);
-      const [vData, vFunc, vRes, vIdx, vVal, vLoad] = [rand(), rand(), rand(), rand(), rand(), rand()];
+      const [vData, vRes, vIdx, vLoad] = [rand(), rand(), rand(), rand()];
 
-      // 4. 构造复杂的自还原逻辑
-      const output = `--[[ ZHI LUA PROTECT V2.0 ]]
+      // 5. 构造复杂的自还原逻辑
+      currentObfuscatedCode = `--[[ High-Quality ZHI LUA Obfuscator ]]
 local ${vData} = {${luaArray}}
 local ${vRes} = ""
 for ${vIdx} = 1, #${vData} do
-    local ${vVal} = ${vData}[${vIdx}]
-    -- 这里的干扰逻辑：每隔 2-3 个字节取一个真实值
+    -- 跳过干扰字节提取真实数据
     if ${vIdx} % 2 == 1 then
-        ${vRes} = ${vRes} .. string.char(${vVal} - 7)
+        ${vRes} = ${vRes} .. string.char(${vData}[${vIdx}] - 5)
     end
 end
 local ${vLoad} = getfenv()[string.reverse("gnirtsdaol")]
 ${vLoad}(${vRes})()`;
 
-      document.getElementById('input').value = output;
-      showMsg("加密完成: 载荷已注入矩阵");
+      document.getElementById('input').value = currentObfuscatedCode;
+      showMsg("加密完成");
+    }
+
+    function downloadCode() {
+      if(!currentObfuscatedCode) return showMsg("请先加密！");
+      const blob = new Blob([currentObfuscatedCode], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ZhiLua_${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showMsg("已下载");
     }
 
     function showMsg(t) {
@@ -108,7 +114,7 @@ ${vLoad}(${vRes})()`;
     function copy() {
       document.getElementById('input').select();
       document.execCommand('copy');
-      showMsg("已复制到剪贴板");
+      showMsg("已复制");
     }
   </script>
 </body>
