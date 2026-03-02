@@ -3,124 +3,176 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZHI LUA by 纸飞机yut</title>
+  <title>ZHI LUA PRO FREE</title>
   <style>
-    :root { --glow: #00f2ff; --bg: #05050a; }
+    :root { --glow: #00f2ff; --bg: #05050a; --error: #ff4444; }
     body { margin: 0; background: var(--bg); color: #fff; font-family: 'Fira Code', monospace; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-    
-    .header { margin: 20px 0; text-align: center; }
-    h1 { font-size: 2rem; text-transform: uppercase; letter-spacing: 5px; color: var(--glow); text-shadow: 0 0 20px var(--glow); }
+    .header { margin: 25px 0; text-align: center; }
+    h1 { font-size: 2.4rem; text-transform: uppercase; letter-spacing: 6px; color: var(--glow); text-shadow: 0 0 30px var(--glow); margin: 0; }
+    .sub { color: #666; font-size: 1rem; margin-top: 8px; }
 
-    .container { display: flex; width: 95%; max-width: 1200px; gap: 20px; background: rgba(255,255,255,0.02); padding: 20px; border: 1px solid #1a1a2e; border-radius: 15px; backdrop-filter: blur(10px); }
-    
-    textarea { flex: 1; height: 550px; background: #000; border: 1px solid #333; border-radius: 8px; color: #00ff41; padding: 15px; font-size: 13px; line-height: 1.5; outline: none; transition: 0.3s; }
-    textarea:focus { border-color: var(--glow); box-shadow: 0 0 15px rgba(0,242,255,0.2); }
+    .container { display: flex; width: 95%; max-width: 1280px; gap: 25px; background: rgba(255,255,255,0.015); padding: 25px; border: 1px solid #1a1a2e; border-radius: 18px; backdrop-filter: blur(12px); }
+    textarea { flex: 1; height: 620px; background: #000; border: 1px solid #2a2a4a; border-radius: 10px; color: #00ff88; padding: 20px; font-size: 14px; line-height: 1.6; outline: none; transition: 0.3s; box-shadow: inset 0 2px 10px rgba(0,0,0,0.6); }
+    textarea:focus { border-color: var(--glow); box-shadow: 0 0 25px rgba(0,242,255,0.3); }
 
-    .controls { display: flex; flex-direction: column; gap: 15px; width: 260px; }
-    
-    button { padding: 15px; background: transparent; color: var(--glow); border: 1px solid var(--glow); border-radius: 5px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.3s; }
-    button:hover { background: var(--glow); color: #000; box-shadow: 0 0 30px var(--glow); }
-    button:active { transform: scale(0.95); }
+    .controls { display: flex; flex-direction: column; gap: 18px; width: 300px; }
+    button { padding: 16px; background: transparent; color: var(--glow); border: 1px solid var(--glow); border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s; font-size: 1.1rem; }
+    button:hover { background: var(--glow); color: #000; box-shadow: 0 0 40px var(--glow); transform: translateY(-2px); }
+    button:active { transform: scale(0.97); }
 
-    .status-bar { margin: 10px 0; font-size: 12px; color: #555; }
-    #msg { color: var(--glow); font-weight: bold; }
+    .status-bar { margin: 15px 0; font-size: 13px; color: #555; text-align: center; width: 95%; max-width: 1280px; }
+    #msg { color: var(--glow); font-weight: bold; font-size: 1.1rem; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>ZhiLua <span style="color:#fff">Obfuscator</span></h1>
-    <p style="color:#444">高端 Lua 代码矩阵混淆系统</p>
+    <h1>ZhiLua <span style="color:#fff">Obfuscator Pro</span></h1>
+    <p class="sub">霓虹矩阵 · 多层假逻辑 · 商用级防逆向保护</p>
   </div>
 
   <div class="container">
-    <textarea id="input" placeholder="-- 输入原始代码..."></textarea>
+    <textarea id="input" placeholder="-- 输入你的原始 Lua 代码...
+-- 加密后将生成大量假逻辑 + 垃圾代码 + 多态表达式，极难逆向"></textarea>
     <div class="controls">
       <button onclick="proEncrypt()">加密</button>
-      <button onclick="downloadCode()">下载混淆文件</button>
-      <button onclick="copy()">复制</button>
+      <button onclick="downloadCode()"> 下载混淆文件</button>
+      <button onclick="copy()">复制结果</button>
       <button onclick="window.location.reload()" style="border-color:#ff4444; color:#ff4444;">重置</button>
     </div>
   </div>
 
-  <div class="status-bar">系统状态: <span id="msg">就绪</span></div>
+  <div class="status-bar">系统状态: <span id="msg">就绪 - 等待输入</span></div>
 
   <script>
     let currentObfuscatedCode = "";
 
+    function showMsg(t, color = 'var(--glow)') {
+      const msg = document.getElementById('msg');
+      msg.innerText = t;
+      msg.style.color = color;
+    }
+
+    function randName() {
+      return "_" + Math.random().toString(36).substring(2, 15) + String.fromCharCode(0x200B + Math.floor(Math.random()*20));
+    }
+
     function proEncrypt() {
       const code = document.getElementById('input').value.trim();
-      if(!code) return showMsg("错误: 输入为空");
+      if (!code) return showMsg("错误：输入代码为空！", "#ff5555");
 
-      // 1. 数据处理：将每个字符转为偏移后的数值
-      let rawData = [];
+      showMsg("正在注入矩阵 + 假逻辑...");
+
+      // 步骤1: 字符串转多层算术 + XOR + 偏移
+      let encrypted = [];
       for (let i = 0; i < code.length; i++) {
-        // 限制在 0-255 范围内
-        rawData.push((code.charCodeAt(i) + 5) % 256); 
+        let c = code.charCodeAt(i);
+        c = (c ^ 0xA5) + 17;  // XOR + 加偏移
+        if (c > 255) c -= 256;
+        encrypted.push(c);
       }
 
-      // 2. 生成矩阵数组：每两个真实数据间插入一个干扰数据
+      // 步骤2: 插入大量干扰字节 + 随机间隔
       let matrix = [];
-      for(let i=0; i<rawData.length; i++){
-        matrix.push(rawData[i]);
-        if(i < rawData.length - 1){
-            // 插入随机干扰字节
-            matrix.push(Math.floor(Math.random() * 255));
+      for (let i = 0; i < encrypted.length; i++) {
+        matrix.push(encrypted[i]);
+        // 随机插入 1\~3 个垃圾字节
+        const junkCount = Math.floor(Math.random() * 3) + 1;
+        for (let j = 0; j < junkCount; j++) {
+          matrix.push(Math.floor(Math.random() * 200) + 50);  // 避免0x00干扰
         }
       }
 
-      // 3. 将数组转为 Lua 定义格式 (算术隐藏)
+      // 步骤3: 生成多态算术表达式（多种写法随机选）
+      const exprTemplates = [
+        v => `(${v} + ${Math.floor(Math.random()*50)} - ${Math.floor(Math.random()*50)})`,
+        v => `(bit32.bxor(${v}, 0))`,
+        v => `(${v} * 1)`,
+        v => `tonumber("${v}")`,
+        v => `(function() return ${v} end)()`
+      ];
+
       let luaArray = matrix.map(v => {
-          // 确保产生的数值加上偏移后不超过255
-          let maxOff = Math.min(100, 255 - v);
-          let off = Math.floor(Math.random() * maxOff) + 1;
-          return `(${v + off} - ${off})`;
+        return exprTemplates[Math.floor(Math.random() * exprTemplates.length)](v);
       }).join(",");
 
-      // 4. 生成随机变量名
-      const rand = () => "_" + Math.random().toString(36).substring(2, 8);
-      const [vData, vRes, vIdx, vLoad] = [rand(), rand(), rand(), rand()];
+      // 步骤4: 生成随机变量名（unicode + 长随机）
+      const vData = randName(), vRes = randName(), vIdx = randName(), vKey = randName(), vDummy = randName();
 
-      // 5. 构造复杂的自还原逻辑
-      currentObfuscatedCode = `--[[ High-Quality ZHI LUA Obfuscator ]]
-local ${vData} = {${luaArray}}
-local ${vRes} = ""
-for ${vIdx} = 1, #${vData} do
-    -- 跳过干扰字节提取真实数据
-    if ${vIdx} % 2 == 1 then
-        -- 修正还原偏移逻辑，确保数值在char范围内
-        local charCode = (${vData}[${vIdx}] - 5)
-        if charCode < 0 then charCode = charCode + 256 end
-        ${vRes} = ${vRes} .. string.char(charCode)
-    end
+      // 步骤5: 大量假逻辑 + 垃圾代码 + 反调试陷阱 + 伪分支
+      const fakeLogic = `
+-- Fake anti-debug & bogus branches
+if debug and debug.getinfo then 
+  error("Debugger detected - script terminated!")
 end
-local ${vLoad} = getfenv()[string.reverse("gnirtsdaol")]
-${vLoad}(${vRes})()`;
+if getfenv and type(getfenv) == "function" then
+  local env = getfenv()
+  if env["debug"] then error("Environment tampered!") end
+end
+
+-- Dead code block 1
+local ${vDummy} = math.pi * 0
+for i=1,20 do ${vDummy} = ${vDummy} + i * 0 end
+if ${vDummy} == math.huge then print("Impossible") end
+
+-- Fake conditional trap
+if math.random() > 2 then
+  while true do end  -- never reach
+end
+
+-- More junk
+local fakeTbl = {1,2,3,4,5}
+table.sort(fakeTbl, function() return false end)
+`;
+
+      // 步骤6: 核心还原逻辑（带假分支 + 多态）
+      currentObfuscatedCode = `--[[ ZhiLua Pro Obfuscator - 商用保护 ]]
+${fakeLogic}
+local \( {vData} = { \){luaArray}}
+local ${vRes} = ""
+local ${vKey} = 0xA5
+for \( {vIdx}=1, # \){vData} do
+  local n = \( {vData}[ \){vIdx}]
+  -- 跳过垃圾字节 (每隔随机个数取一个真实)
+  if ${vIdx} % ${Math.floor(Math.random()*3)+2} == 1 then
+    n = bit32.bxor(n - 17, ${vKey})
+    if n < 0 then n = n + 256 end
+    -- 假分支迷惑逆向
+    if math.sin(0) == 0 then
+      ${vRes} = ${vRes} .. string.char(n)
+    else
+      local dummy = string.char(n + 1)
+      ${vRes} = ${vRes} .. string.char(n)  -- 真实路径
+    end
+  end
+end
+local ${vLoad} = loadstring or getfenv and getfenv().loadstring
+\( {vLoad}( \){vRes})()
+-- Protected by ZhiLua Pro - Do not tamper`;
 
       document.getElementById('input').value = currentObfuscatedCode;
-      showMsg("加密完成");
+      showMsg("加密完成 - 已注入多层假逻辑 + 垃圾代码");
     }
 
     function downloadCode() {
-      if(!currentObfuscatedCode) return showMsg("请先加密！");
-      const blob = new Blob([currentObfuscatedCode], { type: 'text/plain' });
+      if(!currentObfuscatedCode) return showMsg("请先加密！", "#ff5555");
+      const blob = new Blob([currentObfuscatedCode], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ZhiLua_${Date.now()}.txt`;
+      a.download = `ZhiLua_Protected_${Date.now()}.lua`;
       a.click();
       URL.revokeObjectURL(url);
-      showMsg("已下载");
-    }
-
-    function showMsg(t) {
-      document.getElementById('msg').innerText = t;
+      showMsg("已下载保护版文件");
     }
 
     function copy() {
-      document.getElementById('input').select();
-      document.execCommand('copy');
-      showMsg("已复制");
+      if (!currentObfuscatedCode) return showMsg("无内容可复制", "#ff5555");
+      navigator.clipboard.writeText(currentObfuscatedCode).then(() => {
+        showMsg("已复制到剪贴板");
+      }).catch(() => {
+        showMsg("复制失败，请手动选中复制", "#ff5555");
+      });
     }
   </script>
 </body>
