@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZHI LUA PRO FREE - FIXED</title>
+  <title>ZHI LUA PRO STRONG</title>
   <style>
     :root { --glow: #00ff88; --bg: #05050a; --error: #ff4444; }
     body { margin: 0; background: var(--bg); color: #fff; font-family: 'Fira Code', monospace; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -22,13 +22,13 @@
 </head>
 <body>
   <div class="header">
-    <h1>ZhiLua <span style="color:#fff">Obfuscator</span></h1>
-    <p class="sub">算法修复版 · 商用级防逆向</p>
+    <h1>ZhiLua <span style="color:#fff">Strong</span></h1>
+    <p class="sub">字节混淆 · 算术算子变换 · 防逆向</p>
   </div>
   <div class="container">
     <textarea id="input" placeholder="-- 输入你的原始 Lua 代码..."></textarea>
     <div class="controls">
-      <button onclick="proEncrypt()">安全加密</button>
+      <button onclick="proEncrypt()">强力加密</button>
       <button onclick="copy()">复制结果</button>
       <button onclick="window.location.reload()">重置</button>
     </div>
@@ -36,7 +36,7 @@
   <div class="status-bar">系统状态: <span id="msg">就绪</span></div>
 
   <script>
-    function randName(len=8) {
+    function randName(len=10) {
       const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
       let name = chars[Math.floor(Math.random() * chars.length)];
       for (let i = 0; i < len; i++) name += chars[Math.floor(Math.random() * chars.length)];
@@ -47,51 +47,42 @@
       const code = document.getElementById('input').value;
       if (!code) return alert("请输入代码");
 
-      // 算法核心：XOR 混淆
-      let byteArray = [];
-      const key = Math.floor(Math.random() * 255);
+      let processedData = [];
+      const key1 = Math.floor(Math.random() * 100) + 1;
+      const key2 = Math.floor(Math.random() * 100) + 1;
       
       for (let i = 0; i < code.length; i++) {
         let charCode = code.charCodeAt(i);
-        // 加密：XOR + 偏移
-        byteArray.push((charCode ^ key) + 10);
-        // 插入垃圾字节：在每个真字节后插入一个随机字节
-        byteArray.push(Math.floor(Math.random() * 255));
+        // 复杂公式：(byte ^ key1) + key2
+        processedData.push((charCode ^ key1) + key2);
       }
 
       // 生成随机变量名
       const vData = randName();
-      const vKey = randName();
+      const vKey1 = randName();
+      const vKey2 = randName();
       const vResult = randName();
       const vLoader = randName();
-      const vFunc = randName();
 
-      // 构建 Lua 解密脚本
-      let obfuscated = `-- ZhiLua Obfuscator v2.0
-local ${vData} = {${byteArray.join(',')}}
-local ${vKey} = ${key}
+      // 构建复杂的 Lua 解密脚本
+      let obfuscated = `-- ZhiLua Strong
+local ${vData} = {${processedData.join(',')}}
+local ${vKey1} = ${key1}
+local ${vKey2} = ${key2}
 local ${vResult} = ""
 
--- 核心解码逻辑 (修复版：每两步取一个真数据)
-for i = 1, #${vData}, 2 do
-    ${vResult} = ${vResult} .. string.char((${vData}[i] - 10) ~ ${vKey})
+-- 算术变换还原
+for i = 1, #${vData} do
+    local b = ${vData}[i]
+    -- 逆向公式：(b - key2) ^ key1
+    ${vResult} = ${vResult} .. string.char(bit32 and bit32.bxor(b - ${vKey2}, ${vKey1}) or ((b - ${vKey2}) ~ ${vKey1}))
 end
 
--- 插入反调试陷阱
-local function ${vFunc}()
-    if debug and debug.getinfo(2) then
-        -- 侦测到调试器时采取行动
-        error("Unauthorized access")
-    end
-end
-pcall(${vFunc})
-
--- 执行代码
 local ${vLoader} = loadstring or load
 ${vLoader}(${vResult})()`;
 
       document.getElementById('input').value = obfuscated;
-      document.getElementById('msg').innerText = "加密完成，数据已对齐";
+      document.getElementById('msg').innerText = "强力混淆完成";
     }
 
     function copy() {
