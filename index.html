@@ -3,106 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>纸lua 数组混淆器</title>
+  <title>ZHI LUA - 霓虹加密终端</title>
   <style>
-    body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b0b15; color: #e0e0ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    h1 { color: #a0c0ff; margin-bottom: 20px; }
-    .main-area { width: 90%; max-width: 1000px; display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
-    .editor { flex: 1; min-width: 500px; }
-    textarea { width: 100%; height: 480px; padding: 20px; background: #141422; border: 1px solid #333355; border-radius: 10px; color: #98fb98; font-family: 'Consolas', monospace; font-size: 15px; resize: vertical; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
-    .sidebar { width: 240px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+    :root { --glow: #00f2ff; --bg: #05050a; }
+    body { margin: 0; background: var(--bg); color: #fff; font-family: 'Fira Code', monospace; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     
-    button, .link-btn { padding: 16px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.25s; width: 100%; max-width: 240px; text-decoration: none; text-align: center; box-sizing: border-box; }
+    .header { margin: 40px 0; text-align: center; }
+    h1 { font-size: 2rem; text-transform: uppercase; letter-spacing: 5px; color: var(--glow); text-shadow: 0 0 20px var(--glow); }
+
+    .container { display: flex; width: 95%; max-width: 1200px; gap: 20px; background: rgba(255,255,255,0.02); padding: 20px; border: 1px solid #1a1a2e; border-radius: 15px; backdrop-filter: blur(10px); }
     
-    #generateBtn { background: #ae52ff; color: white; }
-    #generateBtn:hover { background: #b96bff; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(174,82,255,0.4); }
+    textarea { flex: 1; height: 550px; background: #000; border: 1px solid #333; border-radius: 8px; color: #00ff41; padding: 15px; font-size: 13px; line-height: 1.5; outline: none; transition: 0.3s; }
+    textarea:focus { border-color: var(--glow); box-shadow: 0 0 15px rgba(0,242,255,0.2); }
+
+    .controls { display: flex; flex-direction: column; gap: 15px; width: 260px; }
     
-    #copyCodeBtn { background: #3498db; color: white; }
-    #copyCodeBtn:hover { background: #5dade2; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(52,152,219,0.4); }
-    
-    #copyAuthorBtn { background: #ff69b4; color: white; }
-    #copyAuthorBtn:hover { background: #ff85c0; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,105,180,0.4); }
-    
-    .link-btn { background: #2ecc71; color: white; display: block; }
-    .link-btn:hover { background: #27ae60; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(46,204,113,0.4); }
-    
-    #msg { margin-top: 20px; font-size: 16px; color: #a0ffcc; text-align: center; width: 100%; max-width: 1000px; min-height: 20px; }
+    button { padding: 15px; background: transparent; color: var(--glow); border: 1px solid var(--glow); border-radius: 5px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.3s; position: relative; overflow: hidden; }
+    button:hover { background: var(--glow); color: #000; box-shadow: 0 0 30px var(--glow); }
+    button:active { transform: scale(0.95); }
+
+    .status-bar { margin-top: 20px; font-size: 12px; color: #555; }
+    #msg { color: var(--glow); font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <h1>纸lua 数组混淆器</h1>
+  <div class="header">
+    <h1>ZhiLua <span style="color:#fff">Obfuscator</span></h1>
+    <p style="color:#444">高端 Lua 代码矩阵混淆系统</p>
+  </div>
 
-  <div class="main-area">
-    <div class="editor">
-      <textarea id="code" placeholder="-- 在此处粘贴你的 Lua 代码
--- 混淆器将其转换为十六进制数组形式"></textarea>
-    </div>
-
-    <div class="sidebar">
-      <button id="generateBtn" onclick="generateCode()">生成加密数组</button>
-      <button id="copyCodeBtn" onclick="copyObfuscatedCode()">复制混淆代码</button>
-      <button id="copyAuthorBtn" onclick="copyAuthor()">复制作者 B 站</button>
-      <a href="https://b23.tv/4DZnv9H" target="_blank" class="link-btn">创造链接</a>
+  <div class="container">
+    <textarea id="input" placeholder="-- 输入原始代码..."></textarea>
+    <div class="controls">
+      <button onclick="proEncrypt()">🚀 高级矩阵加密</button>
+      <button onclick="copy()">📋 复制混淆代码</button>
+      <button onclick="window.location.reload()" style="border-color:#ff4444; color:#ff4444;">♻️ 重置终端</button>
+      <div style="margin-top:auto; padding:15px; border:1px dashed #333; font-size:11px; color:#666;">
+        特性：<br>
+        - 插入伪随机干扰字节<br>
+        - 算术逻辑隐藏数值<br>
+        - 动态解密函数名
+      </div>
     </div>
   </div>
 
-  <div id="msg"></div>
+  <div class="status-bar">系统状态: <span id="msg">就绪</span></div>
 
   <script>
-    let lastGeneratedCode = "";
+    function proEncrypt() {
+      const code = document.getElementById('input').value.trim();
+      if(!code) return showMsg("错误: 未检测到有效载荷");
 
-    // 核心加密逻辑：转换为十六进制数组
-    function obfuscateCode(code) {
-      if (!code.trim()) return "";
-      
-      // 1. 将字符串转换为 Hex 数组
-      let hexArray = [];
+      // 1. 混淆数值并插入垃圾数据
+      let mixedData = [];
       for (let i = 0; i < code.length; i++) {
-        hexArray.push("0x" + code.charCodeAt(i).toString(16).padStart(2, '0'));
+        // 真实数据
+        mixedData.push(code.charCodeAt(i) + 7); // 偏移加密
+        // 插入 1-2 个垃圾数据
+        let trashCount = Math.floor(Math.random() * 2) + 1;
+        for(let j=0; j<trashCount; j++) {
+            mixedData.push(Math.floor(Math.random() * 255)); 
+        }
       }
-      
-      const hexString = hexArray.join(",");
 
-      // 2. 生成随机变量名，增加混淆度
-      const randVar = () => "_0x" + Math.random().toString(16).substring(2, 6);
-      const v1 = randVar(), v2 = randVar(), v3 = randVar(), v4 = randVar();
+      // 2. 将数组转为 Lua 定义格式 (随机选择加减法混淆)
+      let luaArray = mixedData.map(v => {
+          let mode = Math.random();
+          if(mode > 0.5) {
+              let off = Math.floor(Math.random() * 50) + 1;
+              return `(${v + off} - ${off})`;
+          } else {
+              let off = Math.floor(Math.random() * 20) + 2;
+              return `(${v - off} + ${off})`;
+          }
+      }).join(",");
 
-      // 3. 构造 Lua 解密代码 (匹配要求的数组格式)
-      return `local ${v1} = {${hexString}};\n` +
-             `local ${v2} = "";\n` +
-             `for ${v3}, ${v4} in pairs(${v1}) do\n` +
-             `    ${v2} = ${v2} .. string.char(${v4});\n` +
-             `end;\n` +
-             `local _0xHttp = "Http";\n` +
-             `local _0xGet = "Get";\n` +
-             `loadstring(game[_0xHttp .. _0xGet](game, ${v2}))();`;
+      // 3. 生成随机变量名
+      const rand = () => "_" + Math.random().toString(36).substring(2, 8);
+      const [vData, vFunc, vRes, vIdx, vVal, vLoad] = [rand(), rand(), rand(), rand(), rand(), rand()];
+
+      // 4. 构造复杂的自还原逻辑
+      const output = `--[[ ZHI LUA PROTECT V2.0 ]]
+local ${vData} = {${luaArray}}
+local ${vRes} = ""
+for ${vIdx} = 1, #${vData} do
+    local ${vVal} = ${vData}[${vIdx}]
+    -- 这里的干扰逻辑：每隔 2-3 个字节取一个真实值
+    if ${vIdx} % 2 == 1 then
+        ${vRes} = ${vRes} .. string.char(${vVal} - 7)
+    end
+end
+local ${vLoad} = getfenv()[string.reverse("gnirtsdaol")]
+${vLoad}(${vRes})()`;
+
+      document.getElementById('input').value = output;
+      showMsg("加密完成: 载荷已注入矩阵");
     }
 
-    function showMsg(text, color) {
-        const msg = document.getElementById('msg');
-        msg.textContent = text;
-        msg.style.color = color;
-        setTimeout(() => { msg.textContent = ''; }, 3000);
+    function showMsg(t) {
+      document.getElementById('msg').innerText = t;
     }
 
-    function generateCode() {
-      const originalCode = document.getElementById('code').value.trim();
-      if (!originalCode) return showMsg('请输入代码', '#ff7777');
-      lastGeneratedCode = obfuscateCode(originalCode);
-      showMsg('✅ 加密代码已生成至编辑器', '#a0ffcc');
-      document.getElementById('code').value = lastGeneratedCode;
-    }
-
-    function copyObfuscatedCode() {
-      const codeArea = document.getElementById('code');
-      codeArea.select();
+    function copy() {
+      document.getElementById('input').select();
       document.execCommand('copy');
-      showMsg('✅ 代码已复制到剪贴板', '#3498db');
-    }
-
-    function copyAuthor() {
-      navigator.clipboard.writeText('https://b23.tv/4DZnv9H').then(() => showMsg('✅ 作者链接已复制', '#ff69b4'));
+      showMsg("已复制到剪贴板");
     }
   </script>
 </body>
