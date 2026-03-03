@@ -5,213 +5,86 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZhiLua Simple</title>
   <style>
-    :root {
-      --glow: #00ff88;
-      --bg: #05050a;
-      --error: #ff4444;
-      --border: #2a2a4a;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: #eee;
-      font-family: 'Segoe UI', 'Fira Code', monospace, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px 10px;
-    }
-    .header {
-      text-align: center;
-      margin: 30px 0 40px;
-    }
-    h1 {
-      font-size: clamp(2rem, 6vw, 3.2rem);
-      text-transform: uppercase;
-      letter-spacing: 8px;
-      color: var(--glow);
-      text-shadow: 0 0 40px var(--glow), 0 0 80px rgba(0,255,136,0.3);
-      margin: 0;
-    }
-    .sub {
-      color: #888;
-      font-size: 1.1rem;
-      margin-top: 12px;
-    }
-    .main-container {
-      width: 100%;
-      max-width: 1400px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 30px;
-      justify-content: center;
-    }
-    textarea {
-      flex: 1 1 600px;
-      min-height: 500px;
-      max-height: 80vh;
-      background: #0a0a15;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      color: var(--glow);
-      padding: 24px;
-      font-size: 15px;
-      line-height: 1.7;
-      resize: vertical;
-      outline: none;
-      transition: all 0.3s ease;
-    }
-    textarea:focus {
-      border-color: var(--glow);
-      box-shadow: 0 0 30px rgba(0,255,136,0.25);
-    }
-    .controls {
-      flex: 0 0 320px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      min-width: 280px;
-    }
-    button {
-      padding: 18px 24px;
-      font-size: 1.15rem;
-      font-weight: bold;
-      background: transparent;
-      color: var(--glow);
-      border: 2px solid var(--glow);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      min-height: 64px;
-      touch-action: manipulation;
-    }
-    button:hover, button:active {
-      background: var(--glow);
-      color: #000;
-      box-shadow: 0 0 40px var(--glow);
-      transform: translateY(-3px);
-    }
-    button:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .status {
-      margin: 25px 0;
-      font-size: 14px;
-      color: #777;
-      text-align: center;
-      width: 100%;
-      max-width: 1400px;
-    }
-    #msg {
-      color: var(--glow);
-      font-weight: bold;
-    }
-
-    @media (max-width: 900px) {
-      .main-container { flex-direction: column; }
-      .controls { width: 100%; max-width: 500px; margin: 0 auto; }
-      textarea { min-height: 400px; }
-    }
+    :root { --glow: #00ff88; --bg: #05050a; }
+    body { margin:0; background:var(--bg); color:#eee; font-family:monospace; padding:20px; }
+    textarea { width:100%; height:400px; background:#000; color:#0f0; padding:15px; font-size:15px; }
+    .controls { margin:20px 0; display:flex; gap:15px; flex-wrap:wrap; }
+    button { padding:12px 24px; font-size:16px; background:transparent; color:var(--glow); border:2px solid var(--glow); cursor:pointer; }
+    button:hover { background:var(--glow); color:#000; }
+    #msg { color:var(--glow); font-weight:bold; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>ZhiLua <span style="color:#fff">Simple</span></h1>
-    <p class="sub">极简混淆 · 高兼容 · 支持下载</p>
+  <h2>ZhiLua Simple - 修复版</h2>
+  <textarea id="input" placeholder="输入原始 Lua 代码..."></textarea>
+  <div class="controls">
+    <button onclick="encrypt()">加密</button>
+    <button onclick="downloadTxt()" id="dlBtn" disabled>下载 .txt</button>
+    <button onclick="copyCode()">复制</button>
   </div>
-
-  <div class="main-container">
-    <textarea id="input" placeholder="-- 输入你的原始 Lua 代码..."></textarea>
-    
-    <div class="controls">
-      <button onclick="proEncrypt()">简单加密</button>
-      <button onclick="downloadResult()" id="btnDownload" disabled>下载为 .txt</button>
-      <button onclick="copyResult()">复制结果</button>
-      <button onclick="window.location.reload()">重置页面</button>
-    </div>
-  </div>
-
-  <div class="status">系统状态：<span id="msg">就绪</span></div>
+  <div>状态: <span id="msg">就绪</span></div>
 
   <script>
-    let lastObfuscatedCode = "";
+    let lastCode = "";
 
-    function proEncrypt() {
-      const input = document.getElementById('input');
-      const code = input.value.trim();
-      const msg = document.getElementById('msg');
-      const btn = document.getElementById('btnDownload');
+    function encrypt() {
+      const ta = document.getElementById("input");
+      const code = ta.value.trim();
+      const msg = document.getElementById("msg");
+      const dl = document.getElementById("dlBtn");
 
       if (!code) {
-        msg.textContent = "请输入 Lua 代码";
-        msg.style.color = "#ff4444";
+        msg.textContent = "请输入代码";
+        msg.style.color = "red";
         return;
       }
 
       const key = Math.floor(Math.random() * 255) + 1;
-      const bytes = [];
+      let bytes = [];
       for (let i = 0; i < code.length; i++) {
         bytes.push(code.charCodeAt(i) ^ key);
       }
 
-      const dataVar = '_' + Math.random().toString(36).slice(2,10);
-      const keyVar  = '_' + Math.random().toString(36).slice(2,10);
-      const strVar  = '_' + Math.random().toString(36).slice(2,10);
+      const var1 = "x" + Math.random().toString(36).slice(2,10);
+      const var2 = "k" + Math.random().toString(36).slice(2,10);
+      const var3 = "s" + Math.random().toString(36).slice(2,10);
 
-      const obfuscated = `-- ZhiLua Simple - ${new Date().toISOString().slice(0,19).replace('T',' ')}
-local \( {dataVar} = { \){bytes.join(',')}}
-local ${keyVar} = ${key}
-local ${strVar} = ""
+      // 使用模板字符串 + join 确保不出错
+      const lua = [
+        `-- ZhiLua Simple`,
+        `local \( {var1} = { \){bytes.join(",")}}`,
+        `local ${var2} = ${key}`,
+        `local ${var3} = ""`,
+        `for i=1,#${var1} do`,
+        `  ${var3} = \( {var3} .. string.char( \){var1}[i] \~ ${var2})`,
+        `end`,
+        `return (loadstring or load)(${var3})()`
+      ].join("\n");
 
-for i = 1, #${dataVar} do
-  ${strVar} = \( {strVar} .. string.char( \){dataVar}[i] \~ ${keyVar})
-end
+      ta.value = lua;
+      lastCode = lua;
 
-return (loadstring or load)(${strVar})()
-`;
-
-      input.value = obfuscated;
-      lastObfuscatedCode = obfuscated;
-
-      msg.textContent = `加密完成 (key=${key})`;
+      msg.textContent = `完成 (key = ${key})`;
       msg.style.color = "var(--glow)";
-      btn.disabled = false;
+      dl.disabled = false;
     }
 
-    function copyResult() {
-      const input = document.getElementById('input');
-      if (!input.value.trim()) return alert("没有内容可复制");
-
-      navigator.clipboard.writeText(input.value)
-        .then(() => alert("已复制到剪贴板"))
-        .catch(() => {
-          input.select();
-          document.execCommand('copy');
-          alert("已复制（备用方式）");
-        });
+    function copyCode() {
+      const ta = document.getElementById("input");
+      navigator.clipboard.writeText(ta.value).then(() => {
+        alert("已复制");
+      }).catch(() => alert("复制失败，请手动选中文本复制"));
     }
 
-    function downloadResult() {
-      if (!lastObfuscatedCode) {
-        alert("请先进行加密");
-        return;
-      }
-
-      const blob = new Blob([lastObfuscatedCode], { type: 'text/plain;charset=utf-8' });
+    function downloadTxt() {
+      if (!lastCode) return alert("先加密");
+      const blob = new Blob([lastCode], {type: "text/plain;charset=utf-8"});
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `混淆_${Date.now()}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "obf_" + Date.now() + ".txt";
+      a.click();
       URL.revokeObjectURL(url);
-
-      document.getElementById('msg').textContent = "已下载为 txt 文件";
     }
   </script>
 </body>
