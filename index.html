@@ -15,14 +15,14 @@
   </style>
 </head>
 <body>
-  <h2>ZhiLua Simple - 修复版</h2>
-  <textarea id="input" placeholder="输入原始 Lua 代码..."></textarea>
+  <h2>ZhiLua Simple - 已修復版</h2>
+  <textarea id="input" placeholder="輸入原始 Lua 代碼..."></textarea>
   <div class="controls">
     <button onclick="encrypt()">加密</button>
-    <button onclick="downloadTxt()" id="dlBtn" disabled>下载 .txt</button>
-    <button onclick="copyCode()">复制</button>
+    <button onclick="downloadTxt()" id="dlBtn" disabled>下載 .txt</button>
+    <button onclick="copyCode()">複製</button>
   </div>
-  <div>状态: <span id="msg">就绪</span></div>
+  <div>狀態: <span id="msg">就緒</span></div>
 
   <script>
     let lastCode = "";
@@ -34,7 +34,7 @@
       const dl = document.getElementById("dlBtn");
 
       if (!code) {
-        msg.textContent = "请输入代码";
+        msg.textContent = "請輸入代碼";
         msg.style.color = "red";
         return;
       }
@@ -49,7 +49,7 @@
       const var2 = "k" + Math.random().toString(36).slice(2,10);
       const var3 = "s" + Math.random().toString(36).slice(2,10);
 
-      // 使用模板字符串 + join 确保不出错
+      // 正確使用模板字串插值（不要亂加 \ 轉義）
       const lua = [
         `-- ZhiLua Simple`,
         `local \( {var1} = { \){bytes.join(",")}}`,
@@ -72,8 +72,8 @@
     function copyCode() {
       const ta = document.getElementById("input");
       navigator.clipboard.writeText(ta.value).then(() => {
-        alert("已复制");
-      }).catch(() => alert("复制失败，请手动选中文本复制"));
+        alert("已複製");
+      }).catch(() => alert("複製失敗，請手動選取複製"));
     }
 
     function downloadTxt() {
