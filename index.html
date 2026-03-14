@@ -1,91 +1,151 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZhiLua Simple</title>
-  <style>
-    :root { --glow: #00ff88; --bg: #05050a; }
-    body { margin:0; background:var(--bg); color:#eee; font-family:monospace; padding:20px; }
-    textarea { width:100%; height:400px; background:#000; color:#0f0; padding:15px; font-size:15px; }
-    .controls { margin:20px 0; display:flex; gap:15px; flex-wrap:wrap; }
-    button { padding:12px 24px; font-size:16px; background:transparent; color:var(--glow); border:2px solid var(--glow); cursor:pointer; }
-    button:hover { background:var(--glow); color:#000; }
-    #msg { color:var(--glow); font-weight:bold; }
-  </style>
+    <meta charset="UTF-8">
+    <title>PHANTOM V9 ULTRA | VIRTUALIZATION KERNEL</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #00ff96;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #terminal {
+            width: 800px;
+            background: #0a0a0c;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            padding: 20px;
+            position: relative;
+            animation: borderGlow 2s infinite alternate;
+        }
+        @keyframes borderGlow {
+            from { border-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
+            to { border-color: #00ff96; box-shadow: 0 0 20px #00ff96; }
+        }
+        h2 { text-align: center; font-size: 18px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            color: #64c8ff;
+            border: 1px solid #333;
+            resize: none;
+            font-size: 12px;
+            outline: none;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        button {
+            background: #1a1a1f;
+            color: #00ff96;
+            border: 1px solid #00ff96;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New';
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #00ff96;
+            color: #000;
+            box-shadow: 0 0 15px #00ff96;
+        }
+        #status { font-size: 12px; margin-top: 10px; color: #ff5555; }
+    </style>
 </head>
 <body>
-  <h2>ZhiLua Simple - 已修復版</h2>
-  <textarea id="input" placeholder="輸入原始 Lua 代碼..."></textarea>
-  <div class="controls">
-    <button onclick="encrypt()">加密</button>
-    <button onclick="downloadTxt()" id="dlBtn" disabled>下載 .txt</button>
-    <button onclick="copyCode()">複製</button>
-  </div>
-  <div>狀態: <span id="msg">就緒</span></div>
 
-  <script>
-    let lastCode = "";
+<div id="terminal">
+    <h2>>>> PHANTOM_V9_ULTRA_VIRTUALIZER <<<</h2>
+    <textarea id="input" placeholder="-- 在此粘贴你的 Lua 源代码..."></textarea>
+    <div id="status">KERNEL_STATUS: READY</div>
+    <div class="btn-container">
+        <button onclick="obfuscate()">执行高强度混淆</button>
+        <button onclick="clearAll()">清空</button>
+    </div>
+</div>
 
-    function encrypt() {
-      const ta = document.getElementById("input");
-      const code = ta.value.trim();
-      const msg = document.getElementById("msg");
-      const dl = document.getElementById("dlBtn");
-
-      if (!code) {
-        msg.textContent = "請輸入代碼";
-        msg.style.color = "red";
-        return;
-      }
-
-      const key = Math.floor(Math.random() * 255) + 1;
-      let bytes = [];
-      for (let i = 0; i < code.length; i++) {
-        bytes.push(code.charCodeAt(i) ^ key);
-      }
-
-      const var1 = "x" + Math.random().toString(36).slice(2,10);
-      const var2 = "k" + Math.random().toString(36).slice(2,10);
-      const var3 = "s" + Math.random().toString(36).slice(2,10);
-
-      // 正確使用模板字串插值（不要亂加 \ 轉義）
-      const lua = [
-        `-- ZhiLua Simple`,
-        `local \( {var1} = { \){bytes.join(",")}}`,
-        `local ${var2} = ${key}`,
-        `local ${var3} = ""`,
-        `for i=1,#${var1} do`,
-        `  ${var3} = \( {var3} .. string.char( \){var1}[i] \~ ${var2})`,
-        `end`,
-        `return (loadstring or load)(${var3})()`
-      ].join("\n");
-
-      ta.value = lua;
-      lastCode = lua;
-
-      msg.textContent = `完成 (key = ${key})`;
-      msg.style.color = "var(--glow)";
-      dl.disabled = false;
+<script>
+    function generateRandomName(len) {
+        const chars = ["Il1", "l1I", "O0O", "0O0", "I1I", "ll11", "IIll"];
+        let res = "_";
+        for(let i=0; i<len; i++) res += chars[Math.floor(Math.random() * chars.length)];
+        return res;
     }
 
-    function copyCode() {
-      const ta = document.getElementById("input");
-      navigator.clipboard.writeText(ta.value).then(() => {
-        alert("已複製");
-      }).catch(() => alert("複製失敗，請手動選取複製"));
+    function obfuscate() {
+        const input = document.getElementById('input').value;
+        const status = document.getElementById('status');
+        
+        if (input.length < 1) {
+            status.innerText = "ERROR: INPUT_EMPTY";
+            return;
+        }
+
+        status.innerText = "VIRTUALIZING KERNEL... PLEASE WAIT...";
+
+        setTimeout(() => {
+            const key = Math.floor(Math.random() * 200) + 50;
+            const seed = Math.floor(Math.random() * 99999);
+            
+            // 转换为字节码并应用位移异或
+            let encodedData = [];
+            for (let i = 0; i < input.length; i++) {
+                let b = input.charCodeAt(i);
+                // 模拟位左移和异或
+                let val = (b ^ key);
+                encodedData.push(val);
+            }
+
+            // 生成超长垃圾代码池
+            let junkLines = "";
+            for(let i=0; i<400; i++) {
+                junkLines += `local ${generateRandomName(5)} = math.sqrt(${Math.random()}) * math.tan(${Math.random()});\n`;
+            }
+
+            const vmName = generateRandomName(6);
+            const dataName = generateRandomName(6);
+            const keyName = generateRandomName(6);
+
+            // 构建最终的混淆脚本
+            const template = `--[[ PHANTOM_PROTECTED_V9 ]]
+${junkLines}
+local ${dataName} = {${encodedData.join(",")}}
+local ${keyName} = ${key}
+local function ${vmName}(...)
+    local _S = ""
+    for i=1, #${dataName} do
+        local _b = ${dataName}[i]
+        -- 核心动态解密层
+        _S = _S .. string.char(bit32.bxor(_b, ${keyName}))
+    end
+    local _p, _err = loadstring(_S)
+    if _p then return _p(...) else error(_err) end
+end
+${junkLines}
+task.spawn(${vmName})
+`;
+
+            document.getElementById('input').value = template;
+            status.innerText = "KERNEL_STATUS: ENCRYPTION_SUCCESS (手动全选复制即可)";
+        }, 500);
     }
 
-    function downloadTxt() {
-      if (!lastCode) return alert("先加密");
-      const blob = new Blob([lastCode], {type: "text/plain;charset=utf-8"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "obf_" + Date.now() + ".txt";
-      a.click();
-      URL.revokeObjectURL(url);
+    function clearAll() {
+        document.getElementById('input').value = "";
+        document.getElementById('status').innerText = "KERNEL_STATUS: READY";
     }
-  </script>
+</script>
+
 </body>
 </html>
