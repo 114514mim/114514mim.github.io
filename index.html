@@ -1,95 +1,74 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>ZHI_OBSCURE | 终极混淆控制台</title>
+    <title>ZHI_OBSCURE V10</title>
     <style>
-        body { background: #000; color: #00ff00; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        #main { width: 700px; border: 2px solid #00ff00; padding: 30px; box-shadow: 0 0 25px #00ff0044; text-align: center; }
-        textarea { width: 100%; height: 250px; background: #050505; color: #00ff00; border: 1px solid #00ff00; padding: 10px; margin-bottom: 20px; outline: none; }
-        button { background: #00ff00; color: #000; border: none; padding: 15px 40px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-        button:hover { background: #fff; box-shadow: 0 0 15px #fff; }
-        .info { font-size: 12px; color: #666; margin-top: 15px; }
+        body { background: #0a0a0a; color: #ff3e3e; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #console { width: 600px; background: #000; border: 1px solid #ff3e3e; padding: 20px; box-shadow: 0 0 20px #ff3e3e55; }
+        textarea { width: 100%; height: 150px; background: #111; color: #fff; border: 1px solid #333; margin: 10px 0; padding: 5px; }
+        button { width: 100%; padding: 15px; background: #ff3e3e; color: #000; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #fff; }
     </style>
 </head>
 <body>
 
-<div id="main">
-    <h1 style="letter-spacing: 10px;">ZHI_OBSCURE</h1>
-    <textarea id="src" placeholder="-- 粘贴你的代码至此"></textarea>
-    <br>
-    <button onclick="build()">构建并下载 zhiobscure.txt</button>
-    <div class="info">状态: 核心引擎准备就绪 | 文件名已锁定</div>
+<div id="console">
+    <div style="text-align:center; font-size:20px; margin-bottom:10px;">[ ZHI_OBSCURE KERNEL ]</div>
+    <textarea id="inputCode" placeholder="在此粘贴源码..."></textarea>
+    <button onclick="build()">构建 zhiobscure.txt</button>
 </div>
 
 <script>
-    function genVar(len) {
-        const chars = "lI1O0";
-        let res = "_";
-        for(let i=0; i<len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
-        return res;
-    }
+function build() {
+    const src = document.getElementById('inputCode').value;
+    if(!src) return;
 
-    function build() {
-        const input = document.getElementById('src').value;
-        if(!input) return alert("请输入代码");
+    // 核心混淆逻辑：不再堆砌行数，而是把逻辑打碎
+    const key = Math.floor(Math.random() * 255);
+    const data = src.split('').map((c, i) => c.charCodeAt(0) ^ (key + (i % 8))).join(',');
 
-        // 随机加密参数
-        const key = Math.floor(Math.random() * 150) + 80;
-        const shift = Math.floor(Math.random() * 5) + 1;
-
-        // 字节流变异处理
-        let bytes = [];
-        for(let i=0; i<input.length; i++) {
-            let b = input.charCodeAt(i);
-            // 复杂的数学变异
-            bytes.push(b ^ (key + (i % shift)));
-        }
-
-        // 注入 5000 行高强度垃圾指令，让脚本变长
-        let massiveJunk = "";
-        for(let i=0; i<5000; i++) {
-            let v = genVar(12);
-            massiveJunk += `local ${v} = ${Math.random()}; if ${v} == -0.123 then ${v} = 1 end;\n`;
-        }
-
-        const dataName = genVar(15);
-        const vmName = genVar(15);
-
-        const result = `--[[ 
-    PHANTOM VIRTUALIZATION KERNEL 
-    PROTECTION LEVEL: MAXIMUM
-    TARGET: ZHI_OBSCURE
-]]
-${massiveJunk}
-local ${dataName} = {${bytes.join(",")}}
-local function ${vmName}()
-    local _dec = ""
-    for _idx = 1, #${dataName} do
-        -- 核心反混淆障眼法
-        local _val = ${dataName}[_idx]
-        _dec = _dec .. string.char(bit32.bxor(_val, ${key} + (_idx % ${shift})))
-        if _idx % 500 == 0 then -- 运行时动态干扰
-             local _t = tick();
-        end
+    const output = `--[[ ZHI_OBSCURE_V10 ]]
+local _0x1 = {${data}}
+local _0x2 = tonumber
+local _0x3 = string.char
+local _0x4 = bit32 or {bxor = function(a,b) 
+    local r, p = 0, 1
+    while a>0 or b>0 do
+        local aa, bb = a%2, b%2
+        if aa ~= bb then r = r + p end
+        a, b, p = math.floor(a/2), math.floor(b/2), p*2
     end
-    local _exec, _err = loadstring(_dec)
-    if _exec then task.spawn(_exec) else error("ERR_NODE_CRASH") end
+    return r
+end}
+
+local function _0x5(_0x6)
+    local _0x7 = ""
+    for _0x8 = 1, #_0x6 do
+        _0x7 = _0x7 .. _0x3(_0x4.bxor(_0x6[_0x8], ${key} + ((_0x8 - 1) % 8)))
+    end
+    return _0x7
 end
-${massiveJunk}
-${vmName}()
+
+-- 伪装成系统报错信息的执行层
+local _0x9, _0x10 = pcall(function()
+    local _0x11 = loadstring or load
+    return _0x11(_0x5(_0x1))
+end)
+
+if _0x9 and _0x10 then
+    task.spawn(_0x10)
+else
+    warn("Critical System Error: [0x" .. string.format("%X", ${key}) .. "]")
+end
 `;
 
-        // 下载执行
-        const blob = new Blob([result], {type: 'text/plain'});
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "zhiobscure.txt"; // 指定的文件名
-        a.click();
-        window.URL.revokeObjectURL(url);
-    }
+    const blob = new Blob([output], {type: 'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "zhiobscure.txt";
+    a.click();
+}
 </script>
-
 </body>
 </html>
