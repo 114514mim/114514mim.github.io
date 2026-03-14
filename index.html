@@ -2,148 +2,92 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>PHANTOM V9 ULTRA | VIRTUALIZATION KERNEL</title>
+    <title>ZHI_OBSCURE | 终极混淆控制台</title>
     <style>
-        body {
-            background-color: #050505;
-            color: #00ff96;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-        #terminal {
-            width: 800px;
-            background: #0a0a0c;
-            border: 2px solid #ff0000;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
-            padding: 20px;
-            position: relative;
-            animation: borderGlow 2s infinite alternate;
-        }
-        @keyframes borderGlow {
-            from { border-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
-            to { border-color: #00ff96; box-shadow: 0 0 20px #00ff96; }
-        }
-        h2 { text-align: center; font-size: 18px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        textarea {
-            width: 100%;
-            height: 300px;
-            background: #000;
-            color: #64c8ff;
-            border: 1px solid #333;
-            resize: none;
-            font-size: 12px;
-            outline: none;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        .btn-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-        }
-        button {
-            background: #1a1a1f;
-            color: #00ff96;
-            border: 1px solid #00ff96;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-family: 'Courier New';
-            transition: 0.3s;
-        }
-        button:hover {
-            background: #00ff96;
-            color: #000;
-            box-shadow: 0 0 15px #00ff96;
-        }
-        #status { font-size: 12px; margin-top: 10px; color: #ff5555; }
+        body { background: #000; color: #00ff00; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #main { width: 700px; border: 2px solid #00ff00; padding: 30px; box-shadow: 0 0 25px #00ff0044; text-align: center; }
+        textarea { width: 100%; height: 250px; background: #050505; color: #00ff00; border: 1px solid #00ff00; padding: 10px; margin-bottom: 20px; outline: none; }
+        button { background: #00ff00; color: #000; border: none; padding: 15px 40px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        button:hover { background: #fff; box-shadow: 0 0 15px #fff; }
+        .info { font-size: 12px; color: #666; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<div id="terminal">
-    <h2>>>> PHANTOM_V9_ULTRA_VIRTUALIZER <<<</h2>
-    <textarea id="input" placeholder="-- 在此粘贴你的 Lua 源代码..."></textarea>
-    <div id="status">KERNEL_STATUS: READY</div>
-    <div class="btn-container">
-        <button onclick="obfuscate()">执行高强度混淆</button>
-        <button onclick="clearAll()">清空</button>
-    </div>
+<div id="main">
+    <h1 style="letter-spacing: 10px;">ZHI_OBSCURE</h1>
+    <textarea id="src" placeholder="-- 粘贴你的代码至此"></textarea>
+    <br>
+    <button onclick="build()">构建并下载 zhiobscure.txt</button>
+    <div class="info">状态: 核心引擎准备就绪 | 文件名已锁定</div>
 </div>
 
 <script>
-    function generateRandomName(len) {
-        const chars = ["Il1", "l1I", "O0O", "0O0", "I1I", "ll11", "IIll"];
+    function genVar(len) {
+        const chars = "lI1O0";
         let res = "_";
-        for(let i=0; i<len; i++) res += chars[Math.floor(Math.random() * chars.length)];
+        for(let i=0; i<len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
         return res;
     }
 
-    function obfuscate() {
-        const input = document.getElementById('input').value;
-        const status = document.getElementById('status');
-        
-        if (input.length < 1) {
-            status.innerText = "ERROR: INPUT_EMPTY";
-            return;
+    function build() {
+        const input = document.getElementById('src').value;
+        if(!input) return alert("请输入代码");
+
+        // 随机加密参数
+        const key = Math.floor(Math.random() * 150) + 80;
+        const shift = Math.floor(Math.random() * 5) + 1;
+
+        // 字节流变异处理
+        let bytes = [];
+        for(let i=0; i<input.length; i++) {
+            let b = input.charCodeAt(i);
+            // 复杂的数学变异
+            bytes.push(b ^ (key + (i % shift)));
         }
 
-        status.innerText = "VIRTUALIZING KERNEL... PLEASE WAIT...";
+        // 注入 5000 行高强度垃圾指令，让脚本变长
+        let massiveJunk = "";
+        for(let i=0; i<5000; i++) {
+            let v = genVar(12);
+            massiveJunk += `local ${v} = ${Math.random()}; if ${v} == -0.123 then ${v} = 1 end;\n`;
+        }
 
-        setTimeout(() => {
-            const key = Math.floor(Math.random() * 200) + 50;
-            const seed = Math.floor(Math.random() * 99999);
-            
-            // 转换为字节码并应用位移异或
-            let encodedData = [];
-            for (let i = 0; i < input.length; i++) {
-                let b = input.charCodeAt(i);
-                // 模拟位左移和异或
-                let val = (b ^ key);
-                encodedData.push(val);
-            }
+        const dataName = genVar(15);
+        const vmName = genVar(15);
 
-            // 生成超长垃圾代码池
-            let junkLines = "";
-            for(let i=0; i<400; i++) {
-                junkLines += `local ${generateRandomName(5)} = math.sqrt(${Math.random()}) * math.tan(${Math.random()});\n`;
-            }
-
-            const vmName = generateRandomName(6);
-            const dataName = generateRandomName(6);
-            const keyName = generateRandomName(6);
-
-            // 构建最终的混淆脚本
-            const template = `--[[ PHANTOM_PROTECTED_V9 ]]
-${junkLines}
-local ${dataName} = {${encodedData.join(",")}}
-local ${keyName} = ${key}
-local function ${vmName}(...)
-    local _S = ""
-    for i=1, #${dataName} do
-        local _b = ${dataName}[i]
-        -- 核心动态解密层
-        _S = _S .. string.char(bit32.bxor(_b, ${keyName}))
+        const result = `--[[ 
+    PHANTOM VIRTUALIZATION KERNEL 
+    PROTECTION LEVEL: MAXIMUM
+    TARGET: ZHI_OBSCURE
+]]
+${massiveJunk}
+local ${dataName} = {${bytes.join(",")}}
+local function ${vmName}()
+    local _dec = ""
+    for _idx = 1, #${dataName} do
+        -- 核心反混淆障眼法
+        local _val = ${dataName}[_idx]
+        _dec = _dec .. string.char(bit32.bxor(_val, ${key} + (_idx % ${shift})))
+        if _idx % 500 == 0 then -- 运行时动态干扰
+             local _t = tick();
+        end
     end
-    local _p, _err = loadstring(_S)
-    if _p then return _p(...) else error(_err) end
+    local _exec, _err = loadstring(_dec)
+    if _exec then task.spawn(_exec) else error("ERR_NODE_CRASH") end
 end
-${junkLines}
-task.spawn(${vmName})
+${massiveJunk}
+${vmName}()
 `;
 
-            document.getElementById('input').value = template;
-            status.innerText = "KERNEL_STATUS: ENCRYPTION_SUCCESS (手动全选复制即可)";
-        }, 500);
-    }
-
-    function clearAll() {
-        document.getElementById('input').value = "";
-        document.getElementById('status').innerText = "KERNEL_STATUS: READY";
+        // 下载执行
+        const blob = new Blob([result], {type: 'text/plain'});
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "zhiobscure.txt"; // 指定的文件名
+        a.click();
+        window.URL.revokeObjectURL(url);
     }
 </script>
 
