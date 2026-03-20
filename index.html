@@ -1,3 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Lua 深度混淆器 - By 114514mim</title>
+    <style>
+        :root { --primary: #8b5cf6; --bg: #020617; --card: #1e293b; --text: #f1f5f9; --success: #10b981; }
+        body { font-family: 'Segoe UI', 'Consolas', monospace; padding: 20px; background: var(--bg); color: var(--text); line-height: 1.6; }
+        .container { max-width: 1000px; margin: 0 auto; background: #0f172a; padding: 30px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .header-area { text-align: center; margin-bottom: 25px; }
+        textarea { 
+            width: 100%; height: 250px; background: #020617; color: #a5f3fc; 
+            border: 1px solid #334155; border-radius: 12px; padding: 15px; 
+            font-size: 13px; margin-bottom: 20px; resize: vertical; outline: none;
+            transition: border 0.3s;
+        }
+        textarea:focus { border-color: var(--primary); }
+        .controls { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        button { 
+            background: var(--primary); color: white; border: none; 
+            padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold;
+            transition: all 0.2s; text-transform: uppercase; font-size: 14px;
+        }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        .secondary-btn { background: #475569; }
+        .download-btn { background: var(--success); }
+        h2 { font-size: 1.8rem; color: var(--primary); margin: 0; }
+        p.subtitle { color: #94a3b8; margin-top: 5px; font-size: 0.9rem; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #cbd5e1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-area">
+        <h2>Lua 深度脚本混淆器</h2>
+        <p class="subtitle">by 114514mim.github.io</p>
+    </div>
+
+    <label>输入原始代码：</label>
+    <textarea id="inputCode" placeholder="print('Hello World')"></textarea>
+    
+    <div class="controls">
+        <button onclick="obfuscate()">一键深度混淆</button>
+        <button class="secondary-btn" onclick="copyOutput()">复制结果</button>
+        <button class="download-btn" onclick="downloadFile()">下载 .lua 文件</button>
+    </div>
+    
+    <label>混淆结果：</label>
+    <textarea id="outputCode" readonly placeholder="混淆后的代码将出现在这里..."></textarea>
+</div>
+
 <script>
 const ASCII_HEADER = `--[[
          __________          __________          __________
@@ -9,44 +61,64 @@ const ASCII_HEADER = `--[[
 /____________/ /    /____________/ /    /____________/ /
 |____________|/     |____________|/     |____________|/
 
-              << Obfuscated by https://114514mim.github.io >>
+              by 114514mim.github.io
 ]]\n\n`;
 
 function obfuscate() {
     const input = document.getElementById('inputCode').value;
-    if (!input.trim()) return;
+    if (!input.trim()) return alert("请先输入代码！");
 
-    // 1. 将整个脚本转换为十进制转义字符 (\104\116\116...)
-    let encoded = "";
+    // 1. 转为字节流并进行 XOR 异或加密
+    const key = Math.floor(Math.random() * 200) + 55;
+    let encrypted = [];
     for (let i = 0; i < input.length; i++) {
-        encoded += "\\" + input.charCodeAt(i);
+        encrypted.push(input.charCodeAt(i) ^ key);
     }
 
-    // 2. 注入垃圾干扰代码 (Junk Code)
-    // 制造一些虚假的局部变量，迷惑反汇编工具
-    const junkVariables = [
-        `local _0x${Math.random().toString(16).slice(2, 8)} = "${Math.random().toString(36).slice(2, 10)}";`,
-        `local _0x${Math.random().toString(16).slice(2, 8)} = (function() return ${Math.floor(Math.random() * 1000)} end)();`,
-        `if false then print("${Math.random().toString(36)}") end`
-    ].join("\n");
+    // 2. 构建解密加载器
+    const v_data = "_0x" + Math.random().toString(16).slice(2, 8);
+    const v_func = "_0x" + Math.random().toString(16).slice(2, 8);
+    const v_res = "_0x" + Math.random().toString(16).slice(2, 8);
 
-    // 3. 构建多层嵌套执行逻辑
-    // 使用 loadstring 执行编码后的内容，并包裹在匿名函数中
-    // 同时对 "loadstring" 这个关键词也进行混淆 (通过 getfenv 或反斜杠)
-    let finalCode = `${junkVariables}\n`;
-    finalCode += `(function(...) \n`;
-    finalCode += `    local _0x_runtime = "\\108\\111\\97\\100\\115\\116\\114\\105\\110\\103"; -- "loadstring"\n`;
-    finalCode += `    getfenv()[_0x_runtime]("${encoded}")(...);\n`;
-    finalCode += `end)();`;
+    const loader = `
+local ${v_data} = {${encrypted.join(',')}}
+local function ${v_func}(d, k)
+    local ${v_res} = ""
+    for i = 1, #d do ${v_res} = ${v_res} .. string.char(d[i] ~ k) end
+    return ${v_res}
+end
+local _run = loadstring or load
+_run(${v_func}(${v_data}, ${key}))()
+`.trim();
 
-    // 4. 输出结果
-    document.getElementById('outputCode').value = ASCII_HEADER + finalCode;
+    document.getElementById('outputCode').value = ASCII_HEADER + loader;
 }
 
 function copyOutput() {
     const output = document.getElementById('outputCode');
+    if (!output.value) return;
     output.select();
     document.execCommand('copy');
-    alert('混淆脚本已复制！');
+    alert('已复制到剪贴板！');
+}
+
+function downloadFile() {
+    const content = document.getElementById('outputCode').value;
+    if (!content) return alert("请先生成混淆代码！");
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    
+    a.href = url;
+    a.download = "obfuscated.lua"; // 下载的文件名
+    document.body.appendChild(a);
+    a.click();
+    
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
 }
 </script>
+
+</body>
+</html>
