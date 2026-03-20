@@ -2,55 +2,61 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Lua 深度混淆器 - By 114514mim</title>
+    <title>Lua 深度混淆器 v2.0 - By 114514mim</title>
     <style>
-        :root { --primary: #8b5cf6; --bg: #020617; --card: #1e293b; --text: #f1f5f9; --success: #10b981; }
-        body { font-family: 'Segoe UI', 'Consolas', monospace; padding: 20px; background: var(--bg); color: var(--text); line-height: 1.6; }
-        .container { max-width: 1000px; margin: 0 auto; background: #0f172a; padding: 30px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .header-area { text-align: center; margin-bottom: 25px; }
+        :root { --primary: #8b5cf6; --bg: #020617; --card: #1e293b; --text: #f1f5f9; --success: #10b981; --warn: #f59e0b; }
+        body { font-family: 'Consolas', 'Monaco', monospace; padding: 20px; background: var(--bg); color: var(--text); line-height: 1.6; }
+        .container { max-width: 1000px; margin: 0 auto; background: #0f172a; padding: 30px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .header-area { text-align: center; margin-bottom: 25px; border-bottom: 1px solid #334155; padding-bottom: 20px; }
         textarea { 
-            width: 100%; height: 250px; background: #020617; color: #a5f3fc; 
+            width: 100%; height: 260px; background: #020617; color: #a5f3fc; 
             border: 1px solid #334155; border-radius: 12px; padding: 15px; 
             font-size: 13px; margin-bottom: 20px; resize: vertical; outline: none;
-            transition: border 0.3s;
+            transition: all 0.3s;
         }
-        textarea:focus { border-color: var(--primary); }
+        textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
         .controls { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
         button { 
             background: var(--primary); color: white; border: none; 
-            padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold;
-            transition: all 0.2s; text-transform: uppercase; font-size: 14px;
+            padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: bold;
+            transition: all 0.2s; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;
         }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .secondary-btn { background: #475569; }
         .download-btn { background: var(--success); }
-        h2 { font-size: 1.8rem; color: var(--primary); margin: 0; }
+        h2 { font-size: 1.8rem; color: var(--primary); margin: 0; text-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
         p.subtitle { color: #94a3b8; margin-top: 5px; font-size: 0.9rem; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #cbd5e1; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #cbd5e1; font-size: 0.9rem; }
+        .footer-note { font-size: 0.8rem; color: #64748b; text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-area">
-        <h2>Lua 深度脚本混淆器</h2>
-        <p class="subtitle">by 114514mim.github.io</p>
+        <h2>LUA OBFUSCATOR CORE</h2>
+        <p class="subtitle">Official Terminal: 114514mim.github.io</p>
     </div>
 
-    <label>输入原始代码：</label>
-    <textarea id="inputCode" placeholder="print('Hello World')"></textarea>
+    <label>〔 原始脚本输入 〕</label>
+    <textarea id="inputCode" placeholder="在此处粘贴你的 Lua 源代码..."></textarea>
     
     <div class="controls">
-        <button onclick="obfuscate()">一键深度混淆</button>
+        <button onclick="obfuscate()">深度混合加密</button>
         <button class="secondary-btn" onclick="copyOutput()">复制结果</button>
-        <button class="download-btn" onclick="downloadFile()">下载 .lua 文件</button>
+        <button class="download-btn" onclick="downloadFile()">导出 .lua 文件</button>
     </div>
     
-    <label>混淆结果：</label>
-    <textarea id="outputCode" readonly placeholder="混淆后的代码将出现在这里..."></textarea>
+    <label>〔 混淆结果输出 〕</label>
+    <textarea id="outputCode" readonly placeholder="等待生成..."></textarea>
+
+    <div class="footer-note">
+        注意：本工具采用 XOR + UTF-8 字节流编码，支持中文，兼容大多数 Roblox/Lua 环境。
+    </div>
 </div>
 
 <script>
+// 自定义 ASCII Header
 const ASCII_HEADER = `--[[
          __________          __________          __________
      /         /|        /         /|        /         /|
@@ -66,32 +72,55 @@ const ASCII_HEADER = `--[[
 
 function obfuscate() {
     const input = document.getElementById('inputCode').value;
-    if (!input.trim()) return alert("请先输入代码！");
+    if (!input.trim()) return alert("错误：输入不能为空！");
 
-    // 1. 转为字节流并进行 XOR 异或加密
-    const key = Math.floor(Math.random() * 200) + 55;
-    let encrypted = [];
-    for (let i = 0; i < input.length; i++) {
-        encrypted.push(input.charCodeAt(i) ^ key);
-    }
+    try {
+        // 1. 使用 TextEncoder 处理 UTF-8 (彻底解决中文报错)
+        const encoder = new TextEncoder();
+        const uint8Array = encoder.encode(input);
+        
+        // 2. 动态生成加密 Key
+        const key = Math.floor(Math.random() * 150) + 50;
+        
+        // 3. 执行异或加密
+        let encryptedData = [];
+        for (let i = 0; i < uint8Array.length; i++) {
+            encryptedData.push(uint8Array[i] ^ key);
+        }
 
-    // 2. 构建解密加载器
-    const v_data = "_0x" + Math.random().toString(16).slice(2, 8);
-    const v_func = "_0x" + Math.random().toString(16).slice(2, 8);
-    const v_res = "_0x" + Math.random().toString(16).slice(2, 8);
+        // 4. 生成随机变量名防止被特征检测
+        const v_data = "_0x" + Math.random().toString(16).slice(2, 8);
+        const v_func = "_0x" + Math.random().toString(16).slice(2, 8);
+        const v_res = "_0x" + Math.random().toString(16).slice(2, 8);
+        const v_load = "_0x" + Math.random().toString(16).slice(2, 8);
 
-    const loader = `
-local ${v_data} = {${encrypted.join(',')}}
+        // 5. 构建健壮的加载壳 (Loader Shell)
+        const loader = `
+local ${v_data} = {${encryptedData.join(',')}}
 local function ${v_func}(d, k)
-    local ${v_res} = ""
-    for i = 1, #d do ${v_res} = ${v_res} .. string.char(d[i] ~ k) end
-    return ${v_res}
+    local ${v_res} = {}
+    for i = 1, #d do 
+        ${v_res}[i] = string.char(d[i] ~ k) 
+    end
+    return table.concat(${v_res})
 end
-local _run = loadstring or load
-_run(${v_func}(${v_data}, ${key}))()
-`.trim();
 
-    document.getElementById('outputCode').value = ASCII_HEADER + loader;
+local ${v_load} = loadstring or load
+if ${v_load} then
+    local success, result = pcall(${v_load}, ${v_func}(${v_data}, ${key}))
+    if success and result then
+        result()
+    else
+        warn("Runtime Error: " .. tostring(result))
+    end
+else
+    error("Critical: Environment does not support loadstring.")
+end`.trim();
+
+        document.getElementById('outputCode').value = ASCII_HEADER + loader;
+    } catch (e) {
+        alert("混淆过程中出现错误: " + e.message);
+    }
 }
 
 function copyOutput() {
@@ -99,19 +128,21 @@ function copyOutput() {
     if (!output.value) return;
     output.select();
     document.execCommand('copy');
-    alert('已复制到剪贴板！');
+    alert('√ 混淆代码已复制！');
 }
 
 function downloadFile() {
     const content = document.getElementById('outputCode').value;
-    if (!content) return alert("请先生成混淆代码！");
+    if (!content) return alert("请先生成代码！");
 
     const blob = new Blob([content], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     
+    // 生成带随机数的混淆文件名
+    const randomName = Math.random().toString(36).slice(2, 6);
     a.href = url;
-    a.download = "obfuscated.lua"; // 下载的文件名
+    a.download = "obfuscated_" + randomName + ".lua";
     document.body.appendChild(a);
     a.click();
     
