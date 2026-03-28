@@ -2,90 +2,101 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Junkie Developments • Script Loader</title>
+    <title>HTML 混淆工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
     <style>
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: #0a0a0a;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
+        body { font-family: sans-serif; background-color: #1e1e1e; color: #eee; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .CodeMirror { height: 300px; border-radius: 8px; margin-bottom: 15px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; }
+        button { 
+            padding: 10px 20px; cursor: pointer; border: none; 
+            border-radius: 4px; background: #007bff; color: white; 
         }
-
-        /* 霓虹红/暗色卡片样式 */
-        .container {
-            background: #121212;
-            padding: 3rem;
-            border-radius: 12px;
-            box-shadow: 0 0 25px rgba(255, 0, 0, 0.1);
-            border: 1px solid #1f1f1f;
-            text-align: center;
-            max-width: 400px;
-            position: relative;
-        }
-
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, #ff0000, #800000);
-            border-radius: 12px 12px 0 0;
-        }
-
-        .status-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        h1 {
-            font-size: 1.4rem;
-            margin: 10px 0;
-            letter-spacing: 1px;
-        }
-
-        p {
-            color: #888;
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        .code-box {
-            background: #050505;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: 'Consolas', monospace;
-            font-size: 0.8rem;
-            color: #ff4d4d;
-            margin: 20px 0;
-            border: 1px dashed #333;
-            word-break: break-all;
-        }
-
-        .footer-text {
-            font-size: 0.7rem;
-            color: #444;
-            margin-top: 20px;
-        }
+        button:hover { background: #0056b3; }
+        .status { font-size: 0.9em; color: #aaa; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="status-icon">🛡️</div>
-    <h1>环境保护已启用</h1>
-    <p>此页面仅供展示。请在受支持的执行器中使用以下加载代码：</p>
+    <h1>HTML 代码混淆器</h1>
+    <p>在下方输入您的代码并点击“混淆”：</p>
     
-    <div class="code-box">
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/114514mim/kdjddjosso/refs/heads/main/纸脚本.v1"))()
+    <textarea id="input-editor"></textarea>
+    
+    <div class="status" id="status-text">就绪</div>
+    
+    <div class="controls">
+        <button onclick="obfuscateCode()">混淆代码</button>
+        <button onclick="copyOutput()">复制结果</button>
+        <button onclick="downloadOutput()">下载脚本</button>
+        <button onclick="clearAll()" style="background:#666;">清空</button>
     </div>
 
-    <p class="footer-text">By zhifeiji yut • Team U.N.</p>
+    <textarea id="output-editor"></textarea>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+
+<script>
+    [span_3](start_span)// 初始化编辑器[span_3](end_span)
+    const inputEditor = CodeMirror.fromTextArea(document.getElementById('input-editor'), {
+        lineNumbers: true,
+        theme: 'monokai',
+        mode: 'text/html'
+    });
+
+    const outputEditor = CodeMirror.fromTextArea(document.getElementById('output-editor'), {
+        lineNumbers: true,
+        theme: 'monokai',
+        mode: 'text/html',
+        readOnly: true
+    });
+
+    [span_4](start_span)[span_5](start_span)// 基础混淆逻辑 (十六进制转义法)[span_4](end_span)[span_5](end_span)
+    function obfuscateCode() {
+        const source = inputEditor.getValue();
+        if(!source) return;
+
+        document.getElementById('status-text').innerText = "正在混淆...";
+        
+        // 模拟混淆过程：将字符转换为十六进制转义序列
+        let obfuscated = source.split('').map(char => {
+            return '\\x' + char.charCodeAt(0).toString(16).padStart(2, '0');
+        }).join('');
+        
+        // 封装成可执行的解密脚本
+        const finalResult = `<script>document.write("${obfuscated}")<\/script>`;
+        
+        outputEditor.setValue(finalResult);
+        document.getElementById('status-text').innerText = "混淆完成！";
+    }
+
+    function copyOutput() {
+        const text = outputEditor.getValue();
+        navigator.clipboard.writeText(text);
+        alert("已复制到剪贴板");
+    }
+
+    function downloadOutput() {
+        const text = outputEditor.getValue();
+        const blob = new Blob([text], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'obfuscated.html';
+        a.click();
+    }
+
+    function clearAll() {
+        inputEditor.setValue('');
+        outputEditor.setValue('');
+        document.getElementById('status-text').innerText = "已清空";
+    }
+</script>
 
 </body>
 </html>
