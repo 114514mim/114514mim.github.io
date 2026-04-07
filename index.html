@@ -2,101 +2,67 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>HTML 混淆工具</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+    <title>代码下载器 (增强版)</title>
     <style>
-        body { font-family: sans-serif; background-color: #1e1e1e; color: #eee; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .CodeMirror { height: 300px; border-radius: 8px; margin-bottom: 15px; }
-        .controls { display: flex; gap: 10px; margin-bottom: 15px; }
-        button { 
-            padding: 10px 20px; cursor: pointer; border: none; 
-            border-radius: 4px; background: #007bff; color: white; 
-        }
-        button:hover { background: #0056b3; }
-        .status { font-size: 0.9em; color: #aaa; margin-bottom: 10px; }
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        textarea { width: 100%; height: 300px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 8px; padding: 10px; font-family: 'Courier New', monospace; }
+        .btn { background: #007AFF; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .btn:hover { background: #0056b3; }
+        #status { color: #666; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>HTML 代码混淆器</h1>
-    <p>在下方输入您的代码并点击“混淆”：</p>
-    
-    <textarea id="input-editor"></textarea>
-    
-    <div class="status" id="status-text">就绪</div>
-    
-    <div class="controls">
-        <button onclick="obfuscateCode()">混淆代码</button>
-        <button onclick="copyOutput()">复制结果</button>
-        <button onclick="downloadOutput()">下载脚本</button>
-        <button onclick="clearAll()" style="background:#666;">清空</button>
+    <h3>请输入代码：</h3>
+    <textarea id="textContent" placeholder="把你想保存的内容粘贴到这里..."></textarea>
+
+    <div>
+        <input type="text" id="fileName" value="my_code" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;"> .txt
+        <button class="btn" onclick="saveAsTxt()">保存并下载</button>
     </div>
+    <div id="status"></div>
 
-    <textarea id="output-editor"></textarea>
-</div>
+    <script>
+        function saveAsTxt() {
+            const content = document.getElementById('textContent').value;
+            const name = document.getElementById('fileName').value + ".txt";
+            const status = document.getElementById('status');
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+            if (!content.trim()) {
+                status.innerText = "❌ 请先输入内容！";
+                return;
+            }
 
-<script>
-    [span_3](start_span)// 初始化编辑器[span_3](end_span)
-    const inputEditor = CodeMirror.fromTextArea(document.getElementById('input-editor'), {
-        lineNumbers: true,
-        theme: 'monokai',
-        mode: 'text/html'
-    });
+            try {
+                // 创建 Blob
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
 
-    const outputEditor = CodeMirror.fromTextArea(document.getElementById('output-editor'), {
-        lineNumbers: true,
-        theme: 'monokai',
-        mode: 'text/html',
-        readOnly: true
-    });
+                // 方案 A: 使用 URL.createObjectURL (主流方式)
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = name;
 
-    [span_4](start_span)[span_5](start_span)// 基础混淆逻辑 (十六进制转义法)[span_4](end_span)[span_5](end_span)
-    function obfuscateCode() {
-        const source = inputEditor.getValue();
-        if(!source) return;
+                document.body.appendChild(a);
+                a.click();
 
-        document.getElementById('status-text').innerText = "正在混淆...";
-        
-        // 模拟混淆过程：将字符转换为十六进制转义序列
-        let obfuscated = source.split('').map(char => {
-            return '\\x' + char.charCodeAt(0).toString(16).padStart(2, '0');
-        }).join('');
-        
-        // 封装成可执行的解密脚本
-        const finalResult = `<script>document.write("${obfuscated}")<\/script>`;
-        
-        outputEditor.setValue(finalResult);
-        document.getElementById('status-text').innerText = "混淆完成！";
-    }
+                // 延迟释放，确保下载触发
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    status.innerText = "✅ 下载请求已发送！";
+                }, 100);
 
-    function copyOutput() {
-        const text = outputEditor.getValue();
-        navigator.clipboard.writeText(text);
-        alert("已复制到剪贴板");
-    }
-
-    function downloadOutput() {
-        const text = outputEditor.getValue();
-        const blob = new Blob([text], { type: 'text/html' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'obfuscated.html';
-        a.click();
-    }
-
-    function clearAll() {
-        inputEditor.setValue('');
-        outputEditor.setValue('');
-        document.getElementById('status-text').innerText = "已清空";
-    }
-</script>
-
+            } catch (err) {
+                // 方案 B: 备用方案 (Data URL)
+                status.innerText = "正在尝试备用下载方式...";
+                const link = document.createElement('a');
+                link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
+                link.download = name;
+                link.click();
+            }
+        }
+    </script>
 </body>
 </html>
