@@ -137,11 +137,11 @@
             </div>
             
             <button class="btn btn-share" onclick="createPaste()">
-                <span>🔗</span> 创建 Raw 链接
+                <span></span> 创建 Raw 链接
             </button>
 
             <button class="btn btn-download" onclick="saveAsTxt()">
-                <span>💾</span> 下载文件
+                <span></span> 下载文件
             </button>
         </div>
 
@@ -161,7 +161,7 @@
         function saveAsTxt() {
             const content = contentEl.value;
             const name = (nameEl.value || "file") + ".txt";
-            if (!content.trim()) return setStatus("❌ 内容为空", "error");
+            if (!content.trim()) return setStatus("内容为空", "error");
 
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
@@ -169,16 +169,16 @@
             a.href = url;
             a.download = name;
             a.click();
-            setStatus("✅ 文件已下载", "success");
+            setStatus("文件已下载", "success");
         }
 
         function createPaste() {
             const content = contentEl.value;
             const title = nameEl.value || "Untitled";
 
-            if (!content.trim()) return setStatus("❌ 无法上传空内容", "error");
+            if (!content.trim()) return setStatus("无法上传空内容", "error");
 
-            setStatus("🚀 正在生成 Raw 链接...", "");
+            setStatus("正在生成 Raw 链接...", "");
 
             fetch('https://pastefy.app/api/v2/paste', {
                 method: 'POST',
@@ -194,14 +194,14 @@
                 if(data.success) {
                     // 关键改动：在 ID 后面加上 /raw
                     const rawUrl = `https://pastefy.app/${data.paste.id}/raw`;
-                    setStatus("✅ 已生成 Raw 链接并尝试打开", "success");
+                    setStatus("已生成 Raw 链接并尝试打开", "success");
                     window.open(rawUrl, '_blank');
                     
                     // 自动复制到剪贴板
                     navigator.clipboard.writeText(rawUrl);
                 }
             })
-            .catch(() => setStatus("❌ 链接创建失败", "error"));
+            .catch(() => setStatus("链接创建失败", "error"));
         }
     </script>
 </body>
