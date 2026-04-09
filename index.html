@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>zhiUI Code Porter - 简洁的代码分发工具</title>
+    <title>zhiUI Code Porter - Raw Link</title>
     <style>
         :root {
             --bg: #050505;
@@ -36,13 +36,10 @@
             border-radius: 24px;
             border: 1px solid var(--border);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        header {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
+        header { margin-bottom: 30px; text-align: center; }
         h2 { margin: 0; color: var(--accent); letter-spacing: -0.5px; }
         p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
 
@@ -89,7 +86,6 @@
             padding: 8px 0;
             outline: none;
             width: 100%;
-            font-family: inherit;
         }
 
         .input-group span { color: var(--text-dim); align-self: center; font-size: 14px; }
@@ -108,8 +104,6 @@
         }
 
         .btn-download { background: var(--accent); color: white; }
-        .btn-download:hover { background: #0063d1; transform: translateY(-1px); }
-
         .btn-share { background: transparent; border: 1px solid var(--accent-share); color: var(--accent-share); }
         .btn-share:hover { background: var(--accent-share); color: white; }
 
@@ -123,9 +117,7 @@
         .success { color: var(--success); }
         .error { color: var(--error); }
 
-        /* 动画 */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .container { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
 </head>
 <body>
@@ -133,23 +125,23 @@
     <div class="container">
         <header>
             <h2>zhiUI Code Porter</h2>
-            <p>快速保存脚本、导出代码或创建 Pastefy 分享链接</p>
+            <p>输入代码并生成直接可引用的 Raw 链接</p>
         </header>
 
-        <textarea id="textContent" placeholder="在此粘贴你的 Luau 脚本或任何文本内容..."></textarea>
+        <textarea id="textContent" placeholder="在此粘贴你的代码内容..."></textarea>
 
         <div class="controls">
             <div class="input-group">
-                <input type="text" id="fileName" placeholder="文件名" value="script_file">
+                <input type="text" id="fileName" placeholder="项目标题" value="zhiUI_Script">
                 <span>.txt</span>
             </div>
             
             <button class="btn btn-share" onclick="createPaste()">
-                <span>🔗</span> 创建链接
+                <span>🔗</span> 创建 Raw 链接
             </button>
 
             <button class="btn btn-download" onclick="saveAsTxt()">
-                <span>💾</span> 保存并下载
+                <span>💾</span> 下载文件
             </button>
         </div>
 
@@ -164,49 +156,29 @@
         function setStatus(msg, type = '') {
             statusEl.innerText = msg;
             statusEl.className = type;
-            setTimeout(() => { if(type === 'success') statusEl.innerText = ''; }, 3000);
         }
 
-        // 功能 1：下载到本地
         function saveAsTxt() {
             const content = contentEl.value;
-            const name = (nameEl.value || "untitled") + ".txt";
+            const name = (nameEl.value || "file") + ".txt";
+            if (!content.trim()) return setStatus("❌ 内容为空", "error");
 
-            if (!content.trim()) {
-                setStatus("❌ 请先输入内容！", "error");
-                return;
-            }
-
-            try {
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = name;
-                document.body.appendChild(a);
-                a.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                    setStatus("✅ 文件已准备好下载", "success");
-                }, 100);
-            } catch (err) {
-                setStatus("❌ 下载失败，请重试", "error");
-            }
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            a.click();
+            setStatus("✅ 文件已下载", "success");
         }
 
-        // 功能 2：创建 Pastefy 链接
         function createPaste() {
             const content = contentEl.value;
-            const title = nameEl.value || "Untitled Script";
+            const title = nameEl.value || "Untitled";
 
-            if (!content.trim()) {
-                setStatus("❌ 内容为空，无法创建链接", "error");
-                return;
-            }
+            if (!content.trim()) return setStatus("❌ 无法上传空内容", "error");
 
-            setStatus("🚀 正在上传至 Pastefy...", "");
+            setStatus("🚀 正在生成 Raw 链接...", "");
 
             fetch('https://pastefy.app/api/v2/paste', {
                 method: 'POST',
@@ -220,16 +192,16 @@
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    const shareUrl = `https://pastefy.app/${data.paste.id}`;
-                    setStatus("✅ 链接创建成功！正在跳转...", "success");
-                    window.open(shareUrl, '_blank');
-                } else {
-                    throw new Error();
+                    // 关键改动：在 ID 后面加上 /raw
+                    const rawUrl = `https://pastefy.app/${data.paste.id}/raw`;
+                    setStatus("✅ 已生成 Raw 链接并尝试打开", "success");
+                    window.open(rawUrl, '_blank');
+                    
+                    // 自动复制到剪贴板
+                    navigator.clipboard.writeText(rawUrl);
                 }
             })
-            .catch(() => {
-                setStatus("❌ 链接创建失败，请检查网络", "error");
-            });
+            .catch(() => setStatus("❌ 链接创建失败", "error"));
         }
     </script>
 </body>
