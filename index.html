@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>zhiUI Code Porter - Raw Link</title>
+    <title>zhiUI Code Porter - Ultimate Edition</title>
     <style>
         :root {
             --bg: #050505;
@@ -11,7 +11,7 @@
             --accent: #007aff;
             --accent-share: #5856d6;
             --accent-fetch: #ff9500;
-            --accent-copy: #8e8e93; /* 复制按钮颜色 */
+            --accent-copy: #8e8e93;
             --text: #ffffff;
             --text-dim: #a0a0a0;
             --border: #222222;
@@ -45,7 +45,6 @@
         h2 { margin: 0; color: var(--accent); letter-spacing: -0.5px; }
         p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
 
-        /* 顶部提取区域布局优化 */
         .fetch-box {
             display: flex;
             gap: 10px;
@@ -70,7 +69,7 @@
 
         textarea {
             width: 100%;
-            height: 400px;
+            height: 420px;
             background: #000;
             color: #d1d1d1;
             border: 1px solid var(--border);
@@ -78,7 +77,8 @@
             padding: 15px;
             box-sizing: border-box;
             font-family: 'Fira Code', 'Consolas', monospace;
-            font-size: 14px;
+            font-size: 13px;
+            line-height: 1.5;
             resize: vertical;
             outline: none;
             transition: border 0.3s;
@@ -121,7 +121,7 @@
             border: none;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s;
             display: flex;
             align-items: center;
@@ -131,7 +131,6 @@
         }
 
         .btn:active { transform: scale(0.96); }
-
         .btn-fetch { background: var(--accent-fetch); color: white; }
         .btn-copy { background: var(--accent-copy); color: white; }
         .btn-download { background: var(--accent); color: white; }
@@ -140,9 +139,10 @@
 
         #status {
             margin-top: 15px;
-            font-size: 13px;
+            font-size: 12px;
             text-align: center;
-            min-height: 20px;
+            min-height: 18px;
+            letter-spacing: 0.5px;
         }
 
         .success { color: var(--success); }
@@ -156,16 +156,16 @@
     <div class="container">
         <header>
             <h2>zhiUI Code Porter</h2>
-            <p>管理您的脚本代码与 Raw 链接</p>
+            <p>提取、管理并分发您的脚本代码链接</p>
         </header>
 
         <div class="fetch-box">
-            <input type="text" id="urlInput" class="fetch-input" placeholder="粘贴 Raw / .txt 链接地址...">
+            <input type="text" id="urlInput" class="fetch-input" placeholder="支持 Luarmor, GitHub, Pastefy 等链接...">
             <button class="btn btn-fetch" onclick="fetchContent()">提取内容</button>
             <button class="btn btn-copy" id="copyBtn" onclick="copyToClipboard()">复制内容</button>
         </div>
 
-        <textarea id="textContent" placeholder="在此粘贴你的代码内容..."></textarea>
+        <textarea id="textContent" placeholder="在此粘贴代码或通过上方链接提取..."></textarea>
 
         <div class="controls">
             <div class="input-group">
@@ -173,7 +173,7 @@
                 <span>.txt</span>
             </div>
 
-            <button class="btn btn-share" onclick="createPaste()">创建 Raw 链接</button>
+            <button class="btn btn-share" onclick="createPaste()">生成 Raw 链接</button>
             <button class="btn btn-download" onclick="saveAsTxt()">下载文件</button>
         </div>
 
@@ -192,25 +192,35 @@
             statusEl.className = type;
         }
 
-        // 提取链接内容
+        // 核心功能：支持跨域中转的提取函数
         async function fetchContent() {
-            const url = urlInputEl.value.trim();
+            let url = urlInputEl.value.trim();
             if (!url) return setStatus("请输入有效的链接", "error");
 
-            setStatus("正在从链接拉取内容...", "");
+            setStatus("正在通过代理拉取内容...", "");
             
+            // 使用 corsproxy.io 处理跨域问题
+            const proxy = "https://corsproxy.io/?"; 
+            const targetUrl = proxy + encodeURIComponent(url);
+
             try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error();
+                const response = await fetch(targetUrl);
+                if (!response.ok) throw new Error("HTTP 错误: " + response.status);
+
                 const text = await response.text();
+                
+                if (!text || text.length < 2) {
+                    throw new Error("链接返回的内容为空");
+                }
+
                 contentEl.value = text;
-                setStatus("内容已成功载入编辑器", "success");
+                setStatus("内容拉取成功 (已绕过 CORS 限制)", "success");
             } catch (err) {
-                setStatus("提取失败: 链接无法访问或被浏览器 CORS 拦截", "error");
+                console.error(err);
+                setStatus("提取失败: " + err.message + "。请确认链接是具体的文件。内容错误: ", "error");
             }
         }
 
-        // 复制内容到剪贴板
         function copyToClipboard() {
             const content = contentEl.value;
             if (!content.trim()) return setStatus("编辑器内容为空", "error");
@@ -219,22 +229,19 @@
                 const originalText = copyBtn.innerText;
                 copyBtn.innerText = "已复制！";
                 copyBtn.style.background = "var(--success)";
-                setStatus("代码已成功复制到剪贴板", "success");
+                setStatus("代码已复制到剪贴板", "success");
 
                 setTimeout(() => {
                     copyBtn.innerText = originalText;
                     copyBtn.style.background = "var(--accent-copy)";
                 }, 1500);
-            }).catch(() => {
-                setStatus("复制失败，请手动选择复制", "error");
-            });
+            }).catch(() => setStatus("复制失败", "error"));
         }
 
-        // 下载为本地 TXT
         function saveAsTxt() {
             const content = contentEl.value;
             const name = (nameEl.value || "file") + ".txt";
-            if (!content.trim()) return setStatus("内容为空，无法下载", "error");
+            if (!content.trim()) return setStatus("内容为空", "error");
 
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
@@ -242,17 +249,16 @@
             a.href = url;
             a.download = name;
             a.click();
-            setStatus("文件下载请求已发送", "success");
+            setStatus("文件已开始下载", "success");
         }
 
-        // 创建新的 Raw 链接
         function createPaste() {
             const content = contentEl.value;
             const title = nameEl.value || "Untitled";
 
-            if (!content.trim()) return setStatus("无法创建空内容的链接", "error");
+            if (!content.trim()) return setStatus("内容为空，无法生成链接", "error");
 
-            setStatus("正在向云端提交代码...", "");
+            setStatus("正在上传至 Pastefy...", "");
 
             fetch('https://pastefy.app/api/v2/paste', {
                 method: 'POST',
@@ -267,12 +273,12 @@
             .then(data => {
                 if(data.success) {
                     const rawUrl = `https://pastefy.app/${data.paste.id}/raw`;
-                    setStatus("Raw 链接已生成并复制到剪贴板", "success");
+                    setStatus("Raw 链接生成成功，已自动复制", "success");
                     window.open(rawUrl, '_blank');
                     navigator.clipboard.writeText(rawUrl);
                 }
             })
-            .catch(() => setStatus("服务请求失败", "error"));
+            .catch(() => setStatus("云端上传失败，请检查网络", "error"));
         }
     </script>
 </body>
