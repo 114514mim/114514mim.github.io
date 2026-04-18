@@ -10,6 +10,8 @@
             --card-bg: #111111;
             --accent: #007aff;
             --accent-share: #5856d6;
+            --accent-fetch: #ff9500;
+            --accent-copy: #8e8e93; /* 复制按钮颜色 */
             --text: #ffffff;
             --text-dim: #a0a0a0;
             --border: #222222;
@@ -29,23 +31,46 @@
         }
 
         .container {
-            width: 90%;
-            max-width: 850px;
+            width: 95%;
+            max-width: 900px;
             background: var(--card-bg);
-            padding: 40px;
+            padding: 30px;
             border-radius: 24px;
             border: 1px solid var(--border);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        header { margin-bottom: 30px; text-align: center; }
+        header { margin-bottom: 25px; text-align: center; }
         h2 { margin: 0; color: var(--accent); letter-spacing: -0.5px; }
         p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
 
+        /* 顶部提取区域布局优化 */
+        .fetch-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .fetch-input {
+            flex: 2;
+            min-width: 250px;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: white;
+            outline: none;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .fetch-input:focus { border-color: var(--accent-fetch); }
+
         textarea {
             width: 100%;
-            height: 350px;
+            height: 400px;
             background: #000;
             color: #d1d1d1;
             border: 1px solid var(--border);
@@ -76,7 +101,7 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 5px 12px;
-            min-width: 200px;
+            min-width: 180px;
         }
 
         .input-group input {
@@ -91,18 +116,24 @@
         .input-group span { color: var(--text-dim); align-self: center; font-size: 14px; }
 
         .btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             border-radius: 8px;
             border: none;
             cursor: pointer;
             font-weight: 600;
             font-size: 14px;
-            transition: 0.2s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
+            white-space: nowrap;
         }
 
+        .btn:active { transform: scale(0.96); }
+
+        .btn-fetch { background: var(--accent-fetch); color: white; }
+        .btn-copy { background: var(--accent-copy); color: white; }
         .btn-download { background: var(--accent); color: white; }
         .btn-share { background: transparent; border: 1px solid var(--accent-share); color: var(--accent-share); }
         .btn-share:hover { background: var(--accent-share); color: white; }
@@ -125,8 +156,14 @@
     <div class="container">
         <header>
             <h2>zhiUI Code Porter</h2>
-            <p>输入代码并生成直接可引用的 Raw 链接</p>
+            <p>管理您的脚本代码与 Raw 链接</p>
         </header>
+
+        <div class="fetch-box">
+            <input type="text" id="urlInput" class="fetch-input" placeholder="粘贴 Raw / .txt 链接地址...">
+            <button class="btn btn-fetch" onclick="fetchContent()">提取内容</button>
+            <button class="btn btn-copy" id="copyBtn" onclick="copyToClipboard()">复制内容</button>
+        </div>
 
         <textarea id="textContent" placeholder="在此粘贴你的代码内容..."></textarea>
 
@@ -135,14 +172,9 @@
                 <input type="text" id="fileName" placeholder="项目标题" value="zhiUI_Script">
                 <span>.txt</span>
             </div>
-            
-            <button class="btn btn-share" onclick="createPaste()">
-                <span></span> 创建 Raw 链接
-            </button>
 
-            <button class="btn btn-download" onclick="saveAsTxt()">
-                <span></span> 下载文件
-            </button>
+            <button class="btn btn-share" onclick="createPaste()">创建 Raw 链接</button>
+            <button class="btn btn-download" onclick="saveAsTxt()">下载文件</button>
         </div>
 
         <div id="status"></div>
@@ -152,16 +184,57 @@
         const statusEl = document.getElementById('status');
         const contentEl = document.getElementById('textContent');
         const nameEl = document.getElementById('fileName');
+        const urlInputEl = document.getElementById('urlInput');
+        const copyBtn = document.getElementById('copyBtn');
 
         function setStatus(msg, type = '') {
             statusEl.innerText = msg;
             statusEl.className = type;
         }
 
+        // 提取链接内容
+        async function fetchContent() {
+            const url = urlInputEl.value.trim();
+            if (!url) return setStatus("请输入有效的链接", "error");
+
+            setStatus("正在从链接拉取内容...", "");
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error();
+                const text = await response.text();
+                contentEl.value = text;
+                setStatus("内容已成功载入编辑器", "success");
+            } catch (err) {
+                setStatus("提取失败: 链接无法访问或被浏览器 CORS 拦截", "error");
+            }
+        }
+
+        // 复制内容到剪贴板
+        function copyToClipboard() {
+            const content = contentEl.value;
+            if (!content.trim()) return setStatus("编辑器内容为空", "error");
+
+            navigator.clipboard.writeText(content).then(() => {
+                const originalText = copyBtn.innerText;
+                copyBtn.innerText = "已复制！";
+                copyBtn.style.background = "var(--success)";
+                setStatus("代码已成功复制到剪贴板", "success");
+
+                setTimeout(() => {
+                    copyBtn.innerText = originalText;
+                    copyBtn.style.background = "var(--accent-copy)";
+                }, 1500);
+            }).catch(() => {
+                setStatus("复制失败，请手动选择复制", "error");
+            });
+        }
+
+        // 下载为本地 TXT
         function saveAsTxt() {
             const content = contentEl.value;
             const name = (nameEl.value || "file") + ".txt";
-            if (!content.trim()) return setStatus("内容为空", "error");
+            if (!content.trim()) return setStatus("内容为空，无法下载", "error");
 
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
@@ -169,16 +242,17 @@
             a.href = url;
             a.download = name;
             a.click();
-            setStatus("文件已下载", "success");
+            setStatus("文件下载请求已发送", "success");
         }
 
+        // 创建新的 Raw 链接
         function createPaste() {
             const content = contentEl.value;
             const title = nameEl.value || "Untitled";
 
-            if (!content.trim()) return setStatus("无法上传空内容", "error");
+            if (!content.trim()) return setStatus("无法创建空内容的链接", "error");
 
-            setStatus("正在生成 Raw 链接...", "");
+            setStatus("正在向云端提交代码...", "");
 
             fetch('https://pastefy.app/api/v2/paste', {
                 method: 'POST',
@@ -192,16 +266,13 @@
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    // 关键改动：在 ID 后面加上 /raw
                     const rawUrl = `https://pastefy.app/${data.paste.id}/raw`;
-                    setStatus("已生成 Raw 链接并尝试打开", "success");
+                    setStatus("Raw 链接已生成并复制到剪贴板", "success");
                     window.open(rawUrl, '_blank');
-                    
-                    // 自动复制到剪贴板
                     navigator.clipboard.writeText(rawUrl);
                 }
             })
-            .catch(() => setStatus("链接创建失败", "error"));
+            .catch(() => setStatus("服务请求失败", "error"));
         }
     </script>
 </body>
