@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>zhiUI Code Porter - Ultimate Edition</title>
+    <title>zhiUI Code Porter - Visual Edition</title>
     <style>
         :root {
             --bg: #050505;
@@ -28,17 +28,18 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .container {
-            width: 95%;
-            max-width: 900px;
+            width: 100%;
+            max-width: 1400px; /* 扩宽容器以容纳双栏 */
             background: var(--card-bg);
             padding: 30px;
             border-radius: 24px;
             border: 1px solid var(--border);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         header { margin-bottom: 25px; text-align: center; }
@@ -49,12 +50,10 @@
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
-            flex-wrap: wrap;
         }
 
         .fetch-input {
-            flex: 2;
-            min-width: 250px;
+            flex: 1;
             background: #000;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -62,14 +61,35 @@
             color: white;
             outline: none;
             font-size: 14px;
-            transition: border 0.3s;
+        }
+        .fetch-input:focus { border-color: var(--accent-fetch); }
+
+        /* 核心改动：工作区双栏布局 */
+        .workspace {
+            display: flex;
+            gap: 20px;
+            height: 550px;
+            margin-bottom: 20px;
         }
 
-        .fetch-input:focus { border-color: var(--accent-fetch); }
+        .editor-side, .viewer-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .side-title {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
 
         textarea {
             width: 100%;
-            height: 420px;
+            flex: 1;
             background: #000;
             color: #d1d1d1;
             border: 1px solid var(--border);
@@ -79,41 +99,50 @@
             font-family: 'Fira Code', 'Consolas', monospace;
             font-size: 13px;
             line-height: 1.5;
-            resize: vertical;
+            resize: none;
             outline: none;
-            transition: border 0.3s;
+        }
+        textarea:focus { border-color: var(--accent); }
+
+        /* 内置沙盒浏览器样式 */
+        .web-viewer {
+            width: 100%;
+            flex: 1;
+            background: #fff; /* 默认白色背景方便看清目标网页 */
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
         }
 
-        textarea:focus { border-color: var(--accent); }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
 
         .controls {
             display: flex;
             gap: 12px;
-            margin-top: 20px;
             align-items: center;
             flex-wrap: wrap;
         }
 
         .input-group {
-            flex: 1;
-            display: flex;
             background: #000;
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 5px 12px;
-            min-width: 180px;
+            display: flex;
+            align-items: center;
         }
-
         .input-group input {
             background: transparent;
             border: none;
             color: white;
             padding: 8px 0;
             outline: none;
-            width: 100%;
         }
-
-        .input-group span { color: var(--text-dim); align-self: center; font-size: 14px; }
+        .input-group span { color: var(--text-dim); font-size: 14px; }
 
         .btn {
             padding: 12px 20px;
@@ -122,16 +151,13 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 13px;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
-            white-space: nowrap;
         }
-
         .btn:active { transform: scale(0.96); }
         .btn-fetch { background: var(--accent-fetch); color: white; }
+        .btn-catch { background: #ff2d55; color: white; } /* 新增：抓取当前页按钮 */
         .btn-copy { background: var(--accent-copy); color: white; }
         .btn-download { background: var(--accent); color: white; }
         .btn-share { background: transparent; border: 1px solid var(--accent-share); color: var(--accent-share); }
@@ -142,37 +168,48 @@
             font-size: 12px;
             text-align: center;
             min-height: 18px;
-            letter-spacing: 0.5px;
         }
-
         .success { color: var(--success); }
         .error { color: var(--error); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="container">
         <header>
-            <h2>zhiUI Code Porter</h2>
-            <p>提取、管理并分发您的脚本代码链接</p>
+            <h2>zhiUI Code Porter <span style="font-size: 12px; vertical-align: middle; background: #333; padding: 3px 8px; border-radius: 10px; color: var(--accent-fetch);">可视化交互版</span></h2>
+            <p>输入网址并在右侧预览，自由导航至目标页面后一键提取</p>
         </header>
 
         <div class="fetch-box">
-            <input type="text" id="urlInput" class="fetch-input" placeholder="支持 Luarmor, GitHub, Pastefy 等链接...">
-            <button class="btn btn-fetch" onclick="fetchContent()">提取内容</button>
-            <button class="btn btn-copy" id="copyBtn" onclick="copyToClipboard()">复制内容</button>
+            <input type="text" id="urlInput" class="fetch-input" placeholder="输入你想浏览的网站链接 (例如: https://pastefy.app 等)...">
+            <button class="btn btn-fetch" onclick="loadVisualProxy()">🌐 打开可视预览</button>
+            <button class="btn btn-catch" onclick="extractCurrentFrame()">⚡ 提取当前视图内容</button>
+            <button class="btn btn-copy" id="copyBtn" onclick="copyToClipboard()">复制文本</button>
         </div>
 
-        <textarea id="textContent" placeholder="在此粘贴代码或通过上方链接提取..."></textarea>
+        <div class="workspace">
+            <div class="editor-side">
+                <div class="side-title"><span>📝 提取后的代码编辑器</span></div>
+                <textarea id="textContent" placeholder="等待提取，或者在此直接编辑代码..."></textarea>
+            </div>
+            
+            <div class="viewer-side">
+                <div class="side-title">
+                    <span>👁️ 互动视窗 (可在内部自由点击链接)</span>
+                    <span id="currentBrowsingUrl" style="color: var(--accent-fetch); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">未连接</span>
+                </div>
+                <div class="web-viewer">
+                    <iframe id="sandboxFrame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+                </div>
+            </div>
+        </div>
 
         <div class="controls">
             <div class="input-group">
                 <input type="text" id="fileName" placeholder="项目标题" value="zhiUI_Script">
                 <span>.txt</span>
             </div>
-
             <button class="btn btn-share" onclick="createPaste()">生成 Raw 链接</button>
             <button class="btn btn-download" onclick="saveAsTxt()">下载文件</button>
         </div>
@@ -186,55 +223,116 @@
         const nameEl = document.getElementById('fileName');
         const urlInputEl = document.getElementById('urlInput');
         const copyBtn = document.getElementById('copyBtn');
+        const iframe = document.getElementById('sandboxFrame');
+        const browsingUrlEl = document.getElementById('currentBrowsingUrl');
+
+        let currentActiveUrl = ""; 
 
         function setStatus(msg, type = '') {
             statusEl.innerText = msg;
             statusEl.className = type;
         }
 
-        // 核心功能：支持跨域中转的提取函数
-        async function fetchContent() {
-            let url = urlInputEl.value.trim();
-            if (!url) return setStatus("请输入有效的链接", "error");
+        // 核心功能：通过反向代理将网页注入到内嵌 iframe
+        async function loadVisualProxy(targetUrl = null) {
+            let url = targetUrl || urlInputEl.value.trim();
+            if (!url) return setStatus("请输入有效的网址", "error");
+            if (!/^https?:\/\//i.test(url)) url = 'https://' + url; // 自动补全协议
 
-            setStatus("正在通过代理拉取内容...", "");
-            
-            // 使用 corsproxy.io 处理跨域问题
+            setStatus("正在构建可视化安全视窗...", "");
+            browsingUrlEl.innerText = "加载中...";
+            currentActiveUrl = url;
+
             const proxy = "https://corsproxy.io/?"; 
-            const targetUrl = proxy + encodeURIComponent(url);
-
+            
             try {
-                const response = await fetch(targetUrl);
-                if (!response.ok) throw new Error("HTTP 错误: " + response.status);
-
-                const text = await response.text();
+                const response = await fetch(proxy + encodeURIComponent(url));
+                if (!response.ok) throw new Error("无法读取该网页");
                 
-                if (!text || text.length < 2) {
-                    throw new Error("链接返回的内容为空");
-                }
+                let html = await response.text();
 
-                contentEl.value = text;
-                setStatus("内容拉取成功 (已绕过 CORS 限制)", "success");
+                // 魔法步骤：重写 HTML 中的相对路径和 A 标签，使用户在内部点击时，依然通过我们的系统加载
+                // 这样用户就能在 iframe 里面“自由点击切换页面”
+                const baseTag = `<base href="${url}">`;
+                html = html.replace('<head>', '<head>' + baseTag);
+
+                // 核心劫持：将页面里所有的跳转拦截，改用我们的系统重新加载
+                const injectionScript = `
+                    <script>
+                        document.addEventListener('click', function(e) {
+                            const target = e.target.closest('a');
+                            if (target && target.href) {
+                                e.preventDefault();
+                                window.parent.postMessage({type: 'NAVIGATE', url: target.href}, '*');
+                            }
+                        });
+                    <\/script>
+                `;
+                html += injectionScript;
+
+                // 将处理后的安全 HTML 塞入 iframe
+                iframe.srcdoc = html;
+                browsingUrlEl.innerText = url;
+                setStatus("视窗载入成功！您可以在右侧点击任意按钮切换页面。", "success");
             } catch (err) {
-                console.error(err);
-                setStatus("提取失败: " + err.message + "。请确认链接是具体的文件。内容错误: ", "error");
+                setStatus("视窗载入失败 (部分严格安全网站不支持预览): " + err.message, "error");
+                browsingUrlEl.innerText = "未连接";
             }
         }
 
+        // 监听来自内部视窗的点击跳转请求
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'NAVIGATE') {
+                urlInputEl.value = event.data.url;
+                loadVisualProxy(event.data.url); // 内部点击时，重新通过代理请求，实现平滑内嵌跳转
+            }
+        });
+
+        // ⚡ 一键提取当前视图里的所有文本/代码
+        async function extractCurrentFrame() {
+            if (!currentActiveUrl) return setStatus("请先在右侧打开一个网站", "error");
+            
+            setStatus("正在提取当前页面的核心数据...", "");
+            const proxy = "https://corsproxy.io/?";
+
+            try {
+                const response = await fetch(proxy + encodeURIComponent(currentActiveUrl));
+                const text = await response.text();
+
+                // 如果返回的是纯文本、代码、或者是JSON，直接放入
+                // 如果返回的是一整个网页 HTML，我们尝试剥离出里面的 <code>, <pre> 或者直接放入文本
+                if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    
+                    // 智能提取策略：优先找代码块，找不到就抓取纯文本
+                    const codeBlock = doc.querySelector('pre, code, textarea');
+                    if (codeBlock) {
+                        contentEl.value = codeBlock.innerText || codeBlock.value;
+                        setStatus("智能识别：已成功提取页面中的代码块！", "success");
+                    } else {
+                        contentEl.value = doc.body.innerText;
+                        setStatus("未找到标准代码块，已提取全页纯文本。", "success");
+                    }
+                } else {
+                    contentEl.value = text;
+                    setStatus("提取纯文本成功！", "success");
+                }
+            } catch (err) {
+                setStatus("抓取失败: " + err.message, "error");
+            }
+        }
+
+        // --- 保留的原有基础功能 ---
         function copyToClipboard() {
             const content = contentEl.value;
             if (!content.trim()) return setStatus("编辑器内容为空", "error");
-
             navigator.clipboard.writeText(content).then(() => {
                 const originalText = copyBtn.innerText;
                 copyBtn.innerText = "已复制！";
                 copyBtn.style.background = "var(--success)";
                 setStatus("代码已复制到剪贴板", "success");
-
-                setTimeout(() => {
-                    copyBtn.innerText = originalText;
-                    copyBtn.style.background = "var(--accent-copy)";
-                }, 1500);
+                setTimeout(() => { copyBtn.innerText = originalText; copyBtn.style.background = "var(--accent-copy)"; }, 1500);
             }).catch(() => setStatus("复制失败", "error"));
         }
 
@@ -242,32 +340,22 @@
             const content = contentEl.value;
             const name = (nameEl.value || "file") + ".txt";
             if (!content.trim()) return setStatus("内容为空", "error");
-
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = name;
-            a.click();
+            a.href = url; a.download = name; a.click();
             setStatus("文件已开始下载", "success");
         }
 
         function createPaste() {
             const content = contentEl.value;
             const title = nameEl.value || "Untitled";
-
             if (!content.trim()) return setStatus("内容为空，无法生成链接", "error");
-
             setStatus("正在上传至 Pastefy...", "");
-
             fetch('https://pastefy.app/api/v2/paste', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: title,
-                    content: content,
-                    type: "PASTE"
-                })
+                body: JSON.stringify({ title: title, content: content, type: "PASTE" })
             })
             .then(res => res.json())
             .then(data => {
