@@ -67,9 +67,25 @@
 
         .fetch-input:focus { border-color: var(--accent-fetch); }
 
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            background: #000;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--accent);
+            background: #081526;
+        }
+
         textarea {
             width: 100%;
-            height: 420px;
+            height: 380px;
             background: #000;
             color: #d1d1d1;
             border: 1px solid var(--border);
@@ -134,6 +150,8 @@
         .btn-fetch { background: var(--accent-fetch); color: white; }
         .btn-copy { background: var(--accent-copy); color: white; }
         .btn-download { background: var(--accent); color: white; }
+        .btn-file { background: #2c2c2e; color: white; border: 1px solid var(--border); }
+        .btn-file:hover { background: #3a3a3c; }
         .btn-share { background: transparent; border: 1px solid var(--accent-share); color: var(--accent-share); }
         .btn-share:hover { background: var(--accent-share); color: white; }
 
@@ -156,16 +174,22 @@
     <div class="container">
         <header>
             <h2>zhiUI Code Porter</h2>
-            <p>提取、管理并分发您的脚本代码链接</p>
+            <p>提取、导入、管理并分发您的脚本代码链接</p>
         </header>
 
         <div class="fetch-box">
             <input type="text" id="urlInput" class="fetch-input" placeholder="支持 Luarmor, GitHub, Pastefy 等链接...">
             <button class="btn btn-fetch" onclick="fetchContent()">提取内容</button>
+            <button class="btn btn-file" onclick="document.getElementById('fileInput').click()">打开本地文件</button>
             <button class="btn btn-copy" id="copyBtn" onclick="copyToClipboard()">复制内容</button>
+            <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
         </div>
 
-        <textarea id="textContent" placeholder="在此粘贴代码或通过上方链接提取..."></textarea>
+        <div class="drop-zone" id="dropZone">
+            <span style="color: var(--text-dim); font-size: 13px;">点击“打开本地文件”或将文件拖拽至此处放入代码</span>
+        </div>
+
+        <textarea id="textContent" placeholder="在此粘贴代码、通过上方链接提取或拖入本地文件..."></textarea>
 
         <div class="controls">
             <div class="input-group">
@@ -186,10 +210,59 @@
         const nameEl = document.getElementById('fileName');
         const urlInputEl = document.getElementById('urlInput');
         const copyBtn = document.getElementById('copyBtn');
+        const dropZone = document.getElementById('dropZone');
 
         function setStatus(msg, type = '') {
             statusEl.innerText = msg;
             statusEl.className = type;
+        }
+
+        // 文件拖拽导入逻辑
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                readFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                readFile(files[0]);
+            }
+        }
+
+        function readFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                contentEl.value = e.target.result;
+                const baseName = file.name.replace(/\.[^/.]+$/, "");
+                nameEl.value = baseName;
+                setStatus(`已成功读取文件: ${file.name}`, "success");
+            };
+            reader.onerror = function() {
+                setStatus("读取文件失败", "error");
+            };
+            reader.readAsText(file);
         }
 
         async function fetchContent() {
@@ -236,7 +309,6 @@
             }).catch(() => setStatus("复制失败", "error"));
         }
 
-        // 优化后的下载逻辑
         function saveAsTxt() {
             const content = contentEl.value;
             let fileName = nameEl.value.trim() || "zhiUI_Script";
@@ -248,7 +320,6 @@
             if (!content.trim()) return setStatus("内容为空，无法生成文件", "error");
 
             try {
-                // 使用 UTF-8 BOM 确保文本在不同平台打开时不乱码
                 const blob = new Blob(["\ufeff", content], { type: 'text/plain;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -260,7 +331,6 @@
                 document.body.appendChild(a);
                 a.click();
                 
-                // 延迟清理 DOM 与内存映射
                 setTimeout(() => {
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
