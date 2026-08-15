@@ -3,49 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roblox Luau VM 高级混淆生成器 Ultra Pro</title>
+  <title>zhiUI Code Porter & Ultra Pro VM Obfuscator Integration</title>
   <style>
     :root {
       --bg-color: #0f172a;
       --card-bg: #1e293b;
       --accent-color: #6366f1;
       --accent-hover: #4f46e5;
+      --accent-fetch: #ff9500;
+      --accent-copy: #8e8e93;
+      --accent-share: #5856d6;
       --text-color: #f8fafc;
+      --text-dim: #94a3b8;
       --border-color: #334155;
+      --success: #10b981;
+      --error: #ef4444;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace, sans-serif; }
     body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .container { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 100%; max-width: 850px; padding: 24px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); }
-    h1 { font-size: 20px; margin-bottom: 8px; color: #fff; }
-    p.subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 20px; }
+    .container { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 100%; max-width: 900px; padding: 24px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); }
+    
+    header { margin-bottom: 20px; text-align: center; }
+    h1 { font-size: 20px; margin-bottom: 6px; color: #fff; }
+    p.subtitle { font-size: 13px; color: var(--text-dim); }
+    
     .section { margin-bottom: 16px; }
     label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #cbd5e1; text-transform: uppercase; }
-    textarea { width: 100%; height: 130px; background-color: #090d16; border: 1px solid var(--border-color); border-radius: 8px; color: #4ade80; padding: 12px; font-size: 13px; resize: vertical; outline: none; }
+
+    .fetch-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .fetch-input {
+      flex: 2;
+      min-width: 240px;
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      outline: none;
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+
+    .fetch-input:focus { border-color: var(--accent-fetch); }
+
+    .drop-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      background: #090d16;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .drop-zone.dragover {
+      border-color: var(--accent-color);
+      background: #1e1b4b;
+    }
+
+    textarea { width: 100%; height: 140px; background-color: #090d16; border: 1px solid var(--border-color); border-radius: 8px; color: #4ade80; padding: 12px; font-size: 13px; resize: vertical; outline: none; }
     textarea:focus { border-color: var(--accent-color); }
-    #outputCode { color: #38bdf8; }
+    #outputCode { color: #38bdf8; height: 160px; }
+
     .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; background: #090d16; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
     .option-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #cbd5e1; cursor: pointer; }
-    .btn-group { display: flex; gap: 12px; margin-top: 16px; }
-    button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .input-group {
+      flex: 1;
+      display: flex;
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 4px 10px;
+      min-width: 180px;
+      align-items: center;
+    }
+
+    .input-group input {
+      background: transparent;
+      border: none;
+      color: white;
+      padding: 6px 0;
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+    }
+
+    .input-group span { color: var(--text-dim); font-size: 13px; }
+
+    button { flex: 1; min-width: 120px; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    button:active { transform: scale(0.97); }
+
     .btn-primary { background-color: var(--accent-color); color: #fff; }
     .btn-primary:hover { background-color: var(--accent-hover); }
+    .btn-fetch { background-color: var(--accent-fetch); color: #fff; }
+    .btn-copy { background-color: var(--accent-copy); color: #fff; }
+    .btn-share { background-color: transparent; border: 1px solid var(--accent-share); color: var(--accent-share); }
+    .btn-share:hover { background-color: var(--accent-share); color: #fff; }
     .btn-secondary { background-color: #334155; color: #fff; }
     .btn-secondary:hover { background-color: #475569; }
-    .toast { margin-top: 12px; font-size: 12px; text-align: center; min-height: 18px; color: #10b981; }
+
+    .toast { margin-top: 14px; font-size: 12px; text-align: center; min-height: 18px; color: var(--success); }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Roblox Luau VM 高级混淆生成器 Ultra Pro</h1>
-    <p class="subtitle">增强融合版：支持常量池 XOR 加密、垃圾指令注入、隐藏全局环境与伪造报错陷阱</p>
+    <header>
+      <h1>zhiUI Code Porter & Ultra Pro VM Obfuscator</h1>
+      <p class="subtitle">提取、导入、配置保护选项、高级 VM 混淆、下载与云端分发一站式工具</p>
+    </header>
 
-    <div class="section">
-      <label for="inputCode">源代码 (Input Source)</label>
-      <textarea id="inputCode" placeholder="粘贴你的代码到这里...">loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/infinite-yield-save-fix.lua"))()</textarea>
+    <!-- 提取与文件导入区 -->
+    <div class="fetch-box">
+      <input type="text" id="urlInput" class="fetch-input" placeholder="支持 Luarmor, GitHub, Pastefy 等 Raw 链接...">
+      <button class="btn-fetch" onclick="fetchContent()">提取内容</button>
+      <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">打开本地文件</button>
+      <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
     </div>
 
+    <div class="drop-zone" id="dropZone">
+      <span style="color: var(--text-dim); font-size: 12px;">点击“打开本地文件”或将脚本拖拽至此处</span>
+    </div>
+
+    <!-- 源代码输入区 -->
+    <div class="section">
+      <label for="inputCode">源代码 (Input Source)</label>
+      <textarea id="inputCode" placeholder="在此粘贴代码、通过上方链接提取或拖入本地文件...">loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/infinite-yield-save-fix.lua"))()</textarea>
+    </div>
+
+    <!-- 混淆选项目录 -->
     <div class="section">
       <label>混淆保护增强选项</label>
       <div class="options-grid">
@@ -55,23 +151,171 @@
       </div>
     </div>
 
+    <!-- 混淆输出区 -->
     <div class="section">
       <label for="outputCode">混淆结果 (Obfuscated VM Output)</label>
-      <textarea id="outputCode" readonly placeholder="点击下方按钮生成强化混淆脚本..."></textarea>
+      <textarea id="outputCode" readonly placeholder="点击下方生成按钮获取 VM 混淆后的脚本..."></textarea>
     </div>
 
+    <!-- 底部控制按钮与文件配置区 -->
     <div class="btn-group">
-      <button class="btn-primary" onclick="generateObfuscatedCode()">生成高级 VM 混淆脚本</button>
-      <button class="btn-secondary" onclick="copyToClipboard()">复制结果</button>
+      <div class="input-group">
+        <input type="text" id="fileName" placeholder="文件项目名称" value="zhiUI_Script_Protected">
+        <span>.txt</span>
+      </div>
+      <button class="btn-primary" onclick="generateObfuscatedCode()">生成 VM 混淆脚本</button>
+      <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">复制混淆结果</button>
+      <button class="btn-share" onclick="createPaste()">生成 Raw 链接</button>
+      <button class="btn-secondary" onclick="saveAsTxt()">下载为文件</button>
     </div>
 
     <div class="toast" id="toastMsg"></div>
   </div>
 
   <script>
-    function getRandomInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
+    const toastEl = document.getElementById("toastMsg");
+    const inputEl = document.getElementById("inputCode");
+    const outputEl = document.getElementById("outputCode");
+    const nameEl = document.getElementById("fileName");
+    const urlInputEl = document.getElementById("urlInput");
+    const copyBtn = document.getElementById("copyBtn");
+    const dropZone = document.getElementById("dropZone");
+
+    function setStatus(msg, isError = false) {
+      toastEl.style.color = isError ? "var(--error)" : "var(--success)";
+      toastEl.innerText = msg;
     }
+
+    // 拖拽导入逻辑
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+      dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
+      document.body.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropZone.addEventListener(evt, () => dropZone.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      dropZone.addEventListener(evt, () => dropZone.classList.remove('dragover'), false);
+    });
+
+    dropZone.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      if (files.length > 0) readFile(files[0]);
+    });
+
+    function handleFileSelect(e) {
+      const files = e.target.files;
+      if (files.length > 0) readFile(files[0]);
+    }
+
+    function readFile(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        inputEl.value = e.target.result;
+        nameEl.value = file.name.replace(/\.[^/.]+$/, "") + "_obf";
+        setStatus(`已成功读取文件: ${file.name}`);
+      };
+      reader.onerror = function() {
+        setStatus("读取本地文件失败！", true);
+      };
+      reader.readAsText(file);
+    }
+
+    // CORS 代理内容拉取
+    async function fetchContent() {
+      let url = urlInputEl.value.trim();
+      if (!url) return setStatus("请输入有效的脚本地址！", true);
+
+      setStatus("正在读取网络资源...");
+      const proxy = "https://corsproxy.io/?"; 
+      const targetUrl = proxy + encodeURIComponent(url);
+
+      try {
+        const response = await fetch(targetUrl);
+        if (!response.ok) throw new Error("HTTP 状态错误: " + response.status);
+
+        const text = await response.text();
+        if (!text || text.length < 2) throw new Error("获取的文件为空");
+
+        inputEl.value = text;
+        setStatus("代码提取成功 (已排除跨域阻止)");
+      } catch (err) {
+        setStatus("提取失败: " + err.message, true);
+      }
+    }
+
+    // 复制混淆代码
+    function copyToClipboard() {
+      const content = outputEl.value;
+      if (!content.trim()) return setStatus("请先生成混淆脚本！", true);
+
+      navigator.clipboard.writeText(content).then(() => {
+        const origText = copyBtn.innerText;
+        copyBtn.innerText = "已复制！";
+        setStatus("已成功复制混淆脚本到剪贴板！");
+        setTimeout(() => { copyBtn.innerText = origText; }, 1500);
+      }).catch(() => setStatus("复制失败！", true));
+    }
+
+    // 保存为 txt
+    function saveAsTxt() {
+      const content = outputEl.value || inputEl.value;
+      let fileName = nameEl.value.trim() || "zhiUI_Script_Protected";
+
+      if (!fileName.toLowerCase().endsWith('.txt')) fileName += ".txt";
+      if (!content.trim()) return setStatus("无内容可供导出！", true);
+
+      try {
+        const blob = new Blob(["\ufeff", content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+        setStatus(`文件 [${fileName}] 已就绪并下载。`);
+      } catch (err) {
+        setStatus("导出失败: " + err.message, true);
+      }
+    }
+
+    // 上传到 Pastefy 获取 Raw 链接
+    function createPaste() {
+      const content = outputEl.value || inputEl.value;
+      const title = nameEl.value || "zhiUI_Script";
+
+      if (!content.trim()) return setStatus("无内容可生成 Raw 链接！", true);
+
+      setStatus("正在生成云端 Raw 链接...");
+
+      fetch('https://pastefy.app/api/v2/paste', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title, content: content, type: "PASTE" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const rawUrl = `https://pastefy.app/${data.paste.id}/raw`;
+          setStatus("Raw 链接生成成功并自动复制到剪贴板");
+          window.open(rawUrl, '_blank');
+          navigator.clipboard.writeText(rawUrl);
+        } else {
+          setStatus("云端链接生成失败", true);
+        }
+      })
+      .catch(() => setStatus("网络异常，无法上传云端！", true));
+    }
+
+    // VM 混淆计算引擎
+    function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function xorEncrypt(str, key) {
       let result = [];
@@ -82,20 +326,13 @@
     }
 
     function generateObfuscatedCode() {
-      const input = document.getElementById("inputCode").value;
-      const toast = document.getElementById("toastMsg");
-
+      const input = inputEl.value;
       const useXor = document.getElementById("optXor").checked;
       const useJunk = document.getElementById("optJunk").checked;
       const useEnvHide = document.getElementById("optEnv").checked;
 
-      if (!input.trim()) {
-        toast.style.color = "#ef4444";
-        toast.innerText = "错误：请输入需要混淆的源代码！";
-        return;
-      }
+      if (!input.trim()) return setStatus("错误：请输入源代码！", true);
 
-      // 动态生成不重复随机 Opcode
       const opcodes = {};
       const keys = ["GETGLOBAL", "LOADK", "CALL", "RETURN", "TRAP", "NOP"];
       keys.forEach(k => { opcodes[k] = getRandomInt(100, 999); });
@@ -113,7 +350,6 @@
       }
 
       let rawInstructions = [];
-
       if (input.includes("HttpGet")) {
         const urlMatch = input.match(/["'](https?:\/\/[^"']+)["']/);
         const targetUrl = urlMatch ? urlMatch[1] : "https://raw.githubusercontent.com/infyiff/backup/main/infinite-yield-save-fix.lua";
@@ -149,7 +385,6 @@
         ];
       }
 
-      // 垃圾指令混淆注入
       let finalInstructions = [];
       rawInstructions.forEach(inst => {
         if (useJunk && Math.random() > 0.4) {
@@ -158,7 +393,6 @@
         finalInstructions.push(`        {${inst[0]}, ${inst[1]}, ${inst[2]}, {${inst[3].join(", ")}}}`);
       });
 
-      // 常量池字符串格式化/加密
       let formattedConstants = "";
       if (useXor) {
         let encryptedPool = rawConstants.map(c => "{" + xorEncrypt(c, xorKey).join(",") + "}");
@@ -169,7 +403,6 @@
 
       const formattedBytecode = finalInstructions.join(",\n");
 
-      // 决定环境获取模式
       const envInit = useEnvHide ? `
 local _ENV_CACHE = (getgenv and getgenv()) or _G or _ENV
 local function _FETCH_ENV(k)
@@ -184,7 +417,6 @@ local _pcall, _xpcall = pcall, xpcall
 local _task_spawn = task.spawn
 `;
 
-      // 组装生成的 VM 模板
       const template = `--[[
     [ULTRA-VM PROTECTED v7.0 ULTRA PRO ENGINE]
     SECURITY: XOR-8BIT / CONTROL FLOW FLATTENED / TRAP PANIC / DYNAMIC ENV
@@ -268,7 +500,6 @@ ${formattedBytecode}
         elseif Opcode == Op_TRAP then
             TriggerPanicTrap(0xE2)
         elseif Opcode == Op_NOP then
-            -- NOP 垃圾指令步进
         elseif Opcode == Op_RETURN then
             IsRunning = false
         end
@@ -278,25 +509,8 @@ end
 
 _task_spawn(function() _pcall(StartVM) end)`;
 
-      document.getElementById("outputCode").value = template;
-      toast.style.color = "#10b981";
-      toast.innerText = "强化融合版 VM 混淆脚本已成功生成！";
-    }
-
-    function copyToClipboard() {
-      const output = document.getElementById("outputCode");
-      const toast = document.getElementById("toastMsg");
-
-      if (!output.value) {
-        toast.style.color = "#ef4444";
-        toast.innerText = "请先生成混淆脚本！";
-        return;
-      }
-
-      output.select();
-      document.execCommand("copy");
-      toast.style.color = "#10b981";
-      toast.innerText = "已成功复制到剪贴板！可以直接在 Roblox 执行器中运行。";
+      outputEl.value = template;
+      setStatus("已成功生成包含防解密/隐藏环境的高级 VM 混淆脚本！");
     }
   </script>
 </body>
