@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roblox Luau VM 高级混淆生成器 Pro</title>
+  <title>Roblox Luau VM 高级混淆生成器 Ultra Pro</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -25,7 +25,7 @@
     textarea:focus { border-color: var(--accent-color); }
     #outputCode { color: #38bdf8; }
     .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; background: #090d16; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
-    .option-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #cbd5e1; }
+    .option-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #cbd5e1; cursor: pointer; }
     .btn-group { display: flex; gap: 12px; margin-top: 16px; }
     button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; }
     .btn-primary { background-color: var(--accent-color); color: #fff; }
@@ -38,8 +38,8 @@
 <body>
 
   <div class="container">
-    <h1>Roblox Luau VM 高级混淆生成器 Pro</h1>
-    <p class="subtitle">增强版：支持常量池 XOR 加密、垃圾指令注入、环境表隐匿与花指令控制流</p>
+    <h1>Roblox Luau VM 高级混淆生成器 Ultra Pro</h1>
+    <p class="subtitle">增强融合版：支持常量池 XOR 加密、垃圾指令注入、隐藏全局环境与伪造报错陷阱</p>
 
     <div class="section">
       <label for="inputCode">源代码 (Input Source)</label>
@@ -50,8 +50,8 @@
       <label>混淆保护增强选项</label>
       <div class="options-grid">
         <label class="option-item"><input type="checkbox" id="optXor" checked> 字符串常量池 XOR 加密</label>
-        <label class="option-item"><input type="checkbox" id="optJunk" checked> 动态垃圾指令注入</label>
-        <label class="option-item"><input type="checkbox" id="optEnv" checked> 隐藏全局环境调用</label>
+        <label class="option-item"><input type="checkbox" id="optJunk" checked> 动态垃圾指令 (NOP) 注入</label>
+        <label class="option-item"><input type="checkbox" id="optEnv" checked> 隐藏全局环境与 API 索引</label>
       </div>
     </div>
 
@@ -87,6 +87,7 @@
 
       const useXor = document.getElementById("optXor").checked;
       const useJunk = document.getElementById("optJunk").checked;
+      const useEnvHide = document.getElementById("optEnv").checked;
 
       if (!input.trim()) {
         toast.style.color = "#ef4444";
@@ -151,7 +152,7 @@
       // 垃圾指令混淆注入
       let finalInstructions = [];
       rawInstructions.forEach(inst => {
-        if (useJunk && Math.random() > 0.5) {
+        if (useJunk && Math.random() > 0.4) {
           finalInstructions.push(`        {${opcodes.NOP}, ${getRandomInt(0, 10)}, ${getRandomInt(0, 10)}, {}}`);
         }
         finalInstructions.push(`        {${inst[0]}, ${inst[1]}, ${inst[2]}, {${inst[3].join(", ")}}}`);
@@ -168,15 +169,29 @@
 
       const formattedBytecode = finalInstructions.join(",\n");
 
+      // 决定环境获取模式
+      const envInit = useEnvHide ? `
+local _ENV_CACHE = (getgenv and getgenv()) or _G or _ENV
+local function _FETCH_ENV(k)
+    return rawget(_ENV_CACHE, k) or _ENV_CACHE[k]
+end
+local _pcall, _xpcall = _FETCH_ENV("pcall"), _FETCH_ENV("xpcall")
+local _task_spawn = _FETCH_ENV("task") and _FETCH_ENV("task").spawn or task.spawn
+` : `
+local _ENV_CACHE = (getgenv and getgenv()) or _G or _ENV
+local function _FETCH_ENV(k) return _ENV_CACHE[k] end
+local _pcall, _xpcall = pcall, xpcall
+local _task_spawn = task.spawn
+`;
+
       // 组装生成的 VM 模板
       const template = `--[[
-    [ULTRA-VM PROTECTED v6.2 ENGINE]
-    ENCRYPTION LAYER: XOR-8BIT / CONTROL FLOW FLATTENED
+    [ULTRA-VM PROTECTED v7.0 ULTRA PRO ENGINE]
+    SECURITY: XOR-8BIT / CONTROL FLOW FLATTENED / TRAP PANIC / DYNAMIC ENV
 --]]
-local _G_ENV = (getgenv and getgenv()) or _G or _ENV
-local _pcall, _xpcall, _select = pcall, xpcall, select
-local _task_spawn = task.spawn
+${envInit}
 local _string_char, _bit32_bxor = string.char, bit32 and bit32.bxor
+local _math_sin = math.sin
 local _debug_traceback = debug and debug.traceback
 
 local XOR_KEY = ${xorKey}
@@ -194,6 +209,7 @@ end
 local FakeErrors = {
     [0xE1] = "CoreGui.RobloxGui.Modules.PlayerList: Attempt to index nil with 'Parent'",
     [0xE2] = "Security Violation: Anti-Cheat Handshake Timeout",
+    [0xE3] = "TaskScheduler: Memory allocation failure during task dispatching",
     [0xE4] = "NetworkClient: Disconnect received from server (Code 273)"
 }
 
@@ -204,6 +220,8 @@ local function TriggerPanicTrap(code)
 end
 
 local function StartVM()
+    if _math_sin(os.time()) > 10.0 then TriggerPanicTrap(0xE1) return end
+
     local Op_GETGLOBAL = ${opcodes.GETGLOBAL}
     local Op_LOADK     = ${opcodes.LOADK}
     local Op_CALL      = ${opcodes.CALL}
@@ -227,7 +245,7 @@ ${formattedBytecode}
         local Opcode = Inst[1]
 
         if Opcode == Op_GETGLOBAL then
-            Registers[Inst[2]] = _G_ENV[ConstantsPool[Inst[3]]]
+            Registers[Inst[2]] = _FETCH_ENV(ConstantsPool[Inst[3]])
         elseif Opcode == Op_LOADK then
             Registers[Inst[2]] = ConstantsPool[Inst[3]]
         elseif Opcode == Op_CALL then
@@ -240,9 +258,9 @@ ${formattedBytecode}
                 local func, p1 = Registers[argRegisters[1]], argRegisters[2] and Registers[argRegisters[2]]
                 if type(func) == "function" then
                     local ok, res = _pcall(func, p1)
-                    if ok then Registers[targetReg] = res else TriggerPanicTrap(0xE1) end
-                elseif type(func) == "string" and _G_ENV[func] then
-                    Registers[targetReg] = _G_ENV[func](p1)
+                    if ok then Registers[targetReg] = res else TriggerPanicTrap(0xE3) end
+                elseif type(func) == "string" and _FETCH_ENV(func) then
+                    Registers[targetReg] = _FETCH_ENV(func)(p1)
                 else
                     TriggerPanicTrap(0xE2)
                 end
@@ -250,7 +268,7 @@ ${formattedBytecode}
         elseif Opcode == Op_TRAP then
             TriggerPanicTrap(0xE2)
         elseif Opcode == Op_NOP then
-            -- NOP Junk Code Step
+            -- NOP 垃圾指令步进
         elseif Opcode == Op_RETURN then
             IsRunning = false
         end
@@ -262,7 +280,7 @@ _task_spawn(function() _pcall(StartVM) end)`;
 
       document.getElementById("outputCode").value = template;
       toast.style.color = "#10b981";
-      toast.innerText = "强化版 VM 混淆脚本已成功生成！";
+      toast.innerText = "强化融合版 VM 混淆脚本已成功生成！";
     }
 
     function copyToClipboard() {
@@ -278,7 +296,7 @@ _task_spawn(function() _pcall(StartVM) end)`;
       output.select();
       document.execCommand("copy");
       toast.style.color = "#10b981";
-      toast.innerText = "已成功复制到剪贴板！";
+      toast.innerText = "已成功复制到剪贴板！可以直接在 Roblox 执行器中运行。";
     }
   </script>
 </body>
